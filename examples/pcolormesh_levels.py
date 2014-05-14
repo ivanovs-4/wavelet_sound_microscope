@@ -12,7 +12,7 @@ import numpy as np
 
 
 # make these smaller to increase the resolution
-dx, dy = 0.05, 0.05
+dx, dy = 0.005, 0.005
 
 # generate 2 2d grids for the x & y bounds
 y, x = np.mgrid[
@@ -25,7 +25,7 @@ z = np.sin(x) ** 10 + np.cos(10 + y * x) * np.cos(x)
 # x and y are bounds, so z should be the value *inside* those bounds.
 # Therefore, remove the last value from the z array.
 z = z[:-1, :-1]
-levels = MaxNLocator(nbins=50).tick_values(z.min(), z.max())
+levels = MaxNLocator(nbins=100).tick_values(z.min(), z.max())
 
 
 # pick the desired colormap, sensible levels, and define a normalization
