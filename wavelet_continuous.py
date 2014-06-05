@@ -76,7 +76,7 @@ def angularfreq(N, dt):
     return w
 
 
-def autoscales(N, dt, dj, wf, p):
+def autoscales(N, dt, dj, p):
      """Compute scales as fractional power of two.
 
      :Parameters:
@@ -86,24 +86,15 @@ def autoscales(N, dt, dj, wf, p):
            time step
         dj : float
            scale resolution (smaller values of dj give finer resolution)
-        wf : string
-           wavelet function ('morlet', 'paul', 'dog')
         p : float
-           omega0 ('morlet') or order ('paul', 'dog')
+           omega0 ('morlet')
      
      :Returns:
         scales : 1d numpy array
            scales
      """
      
-     if wf == 'dog':
-         s0 = (dt * sqrt(p + 0.5)) / pi
-     elif wf == 'paul':
-         s0 = (dt * ((2 * p) + 1)) / (2 * pi)
-     elif wf == 'morlet':
-         s0 = (dt * (p + sqrt(2 + p**2))) / (2 * pi)
-     else:
-         raise ValueError('wavelet function not available')
+     s0 = (dt * (p + sqrt(2 + p**2))) / (2 * pi)
      
      #  See (9) and (10) at page 67.
 
@@ -116,7 +107,7 @@ def autoscales(N, dt, dj, wf, p):
      return s
 
 
-def cwt(data, dt, scales, wf='dog', p=2):
+def cwt(data, dt, scales, p=2):
     """Continuous Wavelet Tranform.
 
     :Parameters:
@@ -126,17 +117,13 @@ def cwt(data, dt, scales, wf='dog', p=2):
           time step
        scales : 1d array_like object
           scales
-       wf : string ('morlet', 'paul', 'dog')
-          wavelet function
        p : float
-          wavelet function parameter ('omega0' for morlet, 'm' for paul
-          and dog)
+          wavelet function parameter ('omega0' for morlet)
             
     :Returns:
        X : 2d numpy array
           transformed data
     """
-   
 
     x_arr = asarray(data) - mean(data)
     scales_arr = asarray(scales)
@@ -149,14 +136,7 @@ def cwt(data, dt, scales, wf='dog', p=2):
 
     w = angularfreq(N=x_arr.shape[0], dt=dt)
         
-    if wf == 'dog':
-        wft = dogft(s=scales_arr, w=w, order=p, dt=dt)
-    elif wf == 'paul':
-        wft = paulft(s=scales_arr, w=w, order=p, dt=dt)
-    elif wf == 'morlet':
-        wft = morletft(s=scales_arr, w=w, w0=p, dt=dt)
-    else:
-        raise ValueError('wavelet function is not available')
+    wft = morletft(s=scales_arr, w=w, w0=p, dt=dt)
     
     X_ARR = empty((wft.shape[0], wft.shape[1]), dtype=complex128)
         
@@ -168,7 +148,7 @@ def cwt(data, dt, scales, wf='dog', p=2):
     return X_ARR
 
 
-def icwt(X, dt, scales, wf='dog', p=2):
+def icwt(X, dt, scales, p=2):
     """Inverse Continuous Wavelet Tranform.
     The reconstruction factor is not applied.
 
@@ -179,8 +159,6 @@ def icwt(X, dt, scales, wf='dog', p=2):
           time step
        scales : 1d array_like object
           scales
-       wf : string ('morlet', 'paul', 'dog')
-          wavelet function
        p : float
           wavelet function parameter
 

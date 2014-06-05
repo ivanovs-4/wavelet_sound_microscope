@@ -14,9 +14,9 @@ SIZE = 64 * 2
 
 y = wav[:bitrate * SIZE / 64, 0]
 
-scales = wave.autoscales(N=y.shape[0], dt=100, dj=0.05, wf='morlet', p=2)
+scales = wave.autoscales(N=y.shape[0], dt=100, dj=0.05, p=2)
 
-compex_image = wave.cwt(y, dt=100, scales=scales, wf='morlet', p=2)
+compex_image = wave.cwt(y, dt=100, scales=scales, p=2)
 
 abs_image = np.abs(compex_image)
 
