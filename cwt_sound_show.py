@@ -10,17 +10,15 @@ import wavelet_continuous as wave
 
 bitrate, wav = wavfile.read('sample.wav')
 
-SIZE = 64 * 2
+y = wav[:bitrate * 2, 0]
 
-y = wav[:bitrate * SIZE / 64, 0]
+scales = wave.autoscales(N=y.shape[0], dt=1, dj=1/9.)
 
-scales = wave.autoscales(N=y.shape[0], dt=100, dj=0.05, p=2)
-
-compex_image = wave.cwt(y, dt=100, scales=scales, p=2)
+compex_image = wave.cwt(y, dt=1, scales=scales)
 
 abs_image = np.abs(compex_image)
 
-image = interpolation.zoom(abs_image, (1, 1. / SIZE))
+image = interpolation.zoom(abs_image, (1, 1. * 100 / bitrate))
 
 fig = plt.figure(1)
 
