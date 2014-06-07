@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
+from pyfft.cuda import Plan
 import numpy as np
+
+import pycuda.driver as cuda
+from pycuda.tools import make_default_context
+import pycuda.gpuarray as gpuarray
+
+
+cuda.init()
+context = make_default_context()
+stream = cuda.Stream()
+
+plan = Plan((256,), stream=stream)
+
+data = numpy.ones((256,), dtype=numpy.complex64)
+gpu_data = gpuarray.to_gpu(data)
+
+plan.execute(gpu_data)
+result = gpu_data.get()
+
+plan.execute(gpu_data, inverse=True)
+reverse_result = gpu_data.get()
+
+context.pop()
 
 
 BACKEND = 'cuda'
@@ -12,7 +35,7 @@ class WaveletBox(object):
         self.scales = self.autoscales(N, dt, dj, np.pi)
         self.angular_frequencies = angularfreq(N=N, dt=dt)
 
-        self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p, 
+        self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p,
                             dt=dt)
 
 
@@ -24,7 +47,7 @@ class WaveletBox(object):
 
         assert x_arr.shape[0] == self.wft.shape[1]
 
-        complex_image = np.empty((self.wft.shape[0], self.wft.shape[1]), 
+        complex_image = np.empty((self.wft.shape[0], self.wft.shape[1]),
                               dtype=np.complex128)
 
         x_arr_ft = np.fft.fft(x_arr)
@@ -42,7 +65,7 @@ class WaveletBox(object):
         :Parameters:
             N : integer : umber of data samples
             dt : float : time step
-            dj : float : scale resolution 
+            dj : float : scale resolution
             p : float : omega0 ('morlet')
 
         :Returns:
