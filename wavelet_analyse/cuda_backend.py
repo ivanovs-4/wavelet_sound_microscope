@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from numpy import *
 
 
-PI2 = 2 * pi
+BACKEND = 'cuda'
+
+PI2 = 2 * np.pi
 
 
 class WaveletBox(object):
-    def __init__(self, N, dt=1, dj=1/9., p=pi):
-        self.scales = self.autoscales(N, dt, dj, pi)
+    def __init__(self, N, dt=1, dj=1/9., p=np.pi):
+        self.scales = self.autoscales(N, dt, dj, np.pi)
         self.angular_frequencies = angularfreq(N=N, dt=dt)
 
         self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p, 
@@ -16,20 +17,20 @@ class WaveletBox(object):
 
 
     def cwt(self, data):
-        x_arr = asarray(data) - mean(data)
+        x_arr = np.asarray(data) - np.mean(data)
 
         if x_arr.ndim is not 1:
             raise ValueError('data must be an 1d numpy array or list')
 
         assert x_arr.shape[0] == self.wft.shape[1]
 
-        complex_image = empty((self.wft.shape[0], self.wft.shape[1]), 
-                              dtype=complex128)
+        complex_image = np.empty((self.wft.shape[0], self.wft.shape[1]), 
+                              dtype=np.complex128)
 
-        x_arr_ft = fft.fft(x_arr)
+        x_arr_ft = np.fft.fft(x_arr)
 
         for i in range(complex_image.shape[0]):
-            complex_image[i] = fft.ifft(x_arr_ft * self.wft[i])
+            complex_image[i] = np.fft.ifft(x_arr_ft * self.wft[i])
 
         return complex_image
 
@@ -48,16 +49,16 @@ class WaveletBox(object):
             scales : 1d numpy array
         """
 
-        s0 = (dt * (p + sqrt(2 + p**2))) / PI2
+        s0 = (dt * (p + np.sqrt(2 + p**2))) / PI2
 
-        J = int(floor(dj**-1 * log2((N * dt) / s0)))
+        J = int(np.floor(dj**-1 * np.log2((N * dt) / s0)))
 
         return np.fromiter((s0 * 2**(i * dj) for i in range(J + 1)),
                            np.float, J + 1)
 
 
 def normalization(s, dt):
-    return sqrt(PI2 * s / dt)
+    return np.sqrt(PI2 * s / dt)
 
 
 def morletft(s, w, w0, dt):
@@ -73,12 +74,12 @@ def morletft(s, w, w0, dt):
     """
 
     p = 0.75112554446494251 # pi**(-1.0/4.0)
-    wavelet = zeros((s.shape[0], w.shape[0]))
+    wavelet = np.zeros((s.shape[0], w.shape[0]))
     pos = w > 0
 
     for i in range(s.shape[0]):
         n = normalization(s[i], dt)
-        wavelet[i][pos] = n * p * exp(-(s[i] * w[pos] - w0)**2 / 2.0)
+        wavelet[i][pos] = n * p * np.exp(-(s[i] * w[pos] - w0)**2 / 2.0)
 
     return wavelet
 

@@ -5,7 +5,9 @@ from scipy.ndimage import interpolation
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
 
-from wavelet_analyse import WaveletBox
+from wavelet_analyse import WaveletBox, BACKEND
+
+print 'Backend:', BACKEND
 
 fig = plt.figure(1)
 
