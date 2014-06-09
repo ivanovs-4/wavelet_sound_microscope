@@ -1,33 +1,23 @@
 # -*- coding: utf-8 -*-
-from pyfft.cuda import Plan
 import numpy as np
-
+import pycuda.autoinit
 import pycuda.driver as cuda
-from pycuda.tools import make_default_context
 import pycuda.gpuarray as gpuarray
-
-
-cuda.init()
-context = make_default_context()
-stream = cuda.Stream()
-
-plan = Plan((256,), stream=stream)
-
-data = numpy.ones((256,), dtype=numpy.complex64)
-gpu_data = gpuarray.to_gpu(data)
-
-plan.execute(gpu_data)
-result = gpu_data.get()
-
-plan.execute(gpu_data, inverse=True)
-reverse_result = gpu_data.get()
-
-context.pop()
+from pycuda.elementwise import ElementwiseKernel
+from pyfft.cuda import Plan
 
 
 BACKEND = 'cuda'
 
 PI2 = 2 * np.pi
+
+
+multiply_them = ElementwiseKernel(
+    "pycuda::complex<float> *dest, pycuda::complex<float> *left, pycuda::complex<float> *right",
+    "dest[i] = left[i] * right[i]",
+    "multiply_them",
+    preamble='''#include <pycuda-complex.hpp>'''
+)
 
 
 class WaveletBox(object):
@@ -38,9 +28,16 @@ class WaveletBox(object):
         self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p,
                             dt=dt)
 
+        self.wft_gpu_i = [gpuarray.to_gpu(np.array(wft_i, dtype=np.complex64))
+                          for wft_i in self.wft]
+
+        stream = cuda.Stream()
+
+        self.plan = Plan((N,), stream=stream)
+
 
     def cwt(self, data):
-        x_arr = np.asarray(data) - np.mean(data)
+        x_arr = np.asarray(data, dtype=np.complex64) - np.mean(data)
 
         if x_arr.ndim is not 1:
             raise ValueError('data must be an 1d numpy array or list')
@@ -48,12 +45,19 @@ class WaveletBox(object):
         assert x_arr.shape[0] == self.wft.shape[1]
 
         complex_image = np.empty((self.wft.shape[0], self.wft.shape[1]),
-                              dtype=np.complex128)
+                                 dtype=np.complex64)
 
-        x_arr_ft = np.fft.fft(x_arr)
+        gpu_x_arr_ft = gpuarray.to_gpu(x_arr)
+        self.plan.execute(gpu_x_arr_ft)
+
+        gpu_med = gpuarray.empty_like(gpu_x_arr_ft)
 
         for i in range(complex_image.shape[0]):
-            complex_image[i] = np.fft.ifft(x_arr_ft * self.wft[i])
+            multiply_them(gpu_med, gpu_x_arr_ft, self.wft_gpu_i[i])
+
+            self.plan.execute(gpu_med, inverse=True)
+
+            complex_image[i] = gpu_med.get()
 
         return complex_image
 
