@@ -5,7 +5,8 @@ from scipy.ndimage import interpolation
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
 
-from wavelet_analyse import WaveletBox, BACKEND
+# from wavelet_analyse import WaveletBox, BACKEND
+from wavelet_analyse.cuda_backend import WaveletBox, BACKEND
 
 print 'Backend:', BACKEND
 
