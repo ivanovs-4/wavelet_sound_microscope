@@ -21,7 +21,7 @@ n_samples = 2**(1 + int(np.log2(bitrate - 1)))
 print 'Bitrate:', bitrate
 print 'N samples:', n_samples
 
-wbox = WaveletBox(N=n_samples, dt=1, dj=1/12.)
+wbox = WaveletBox(N=n_samples, dt=1, dj=1/24., p=30)
 
 n_images = (wav.shape[0] - 1) / n_samples + 1
 print 'N images:', n_images
