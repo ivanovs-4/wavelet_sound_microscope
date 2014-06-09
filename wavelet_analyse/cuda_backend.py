@@ -36,7 +36,7 @@ class WaveletBox(object):
         self.plan = Plan((N,), stream=stream)
 
 
-    def cwt(self, data):
+    def cwt(self, data, decimate=None):
         x_arr = np.asarray(data, dtype=np.complex64) - np.mean(data)
 
         if x_arr.ndim is not 1:
@@ -44,7 +44,13 @@ class WaveletBox(object):
 
         assert x_arr.shape[0] == self.wft.shape[1]
 
-        complex_image = np.empty((self.wft.shape[0], self.wft.shape[1]),
+        if decimate:
+            width = len(self.wft[0][::decimate])
+
+        else:
+            width = self.wft.shape[1]
+
+        complex_image = np.empty((self.wft.shape[0], width),
                                  dtype=np.complex64)
 
         gpu_x_arr_ft = gpuarray.to_gpu(x_arr)
@@ -57,7 +63,11 @@ class WaveletBox(object):
 
             self.plan.execute(gpu_med, inverse=True)
 
-            complex_image[i] = gpu_med.get()
+            if decimate:
+                complex_image[i] = gpu_med.get()[::decimate]
+
+            else:
+                complex_image[i] = gpu_med.get()
 
         return complex_image
 

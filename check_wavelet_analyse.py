@@ -1,7 +1,6 @@
 import sys
 
 import numpy as np
-from scipy.ndimage import interpolation
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
 
@@ -34,11 +33,9 @@ wav_pieces = np.pad(wav, (0, padded_wav_size - wav.shape[0]), 'constant') \
 
 
 for j, y in enumerate(wav_pieces):
-    compex_image = wbox.cwt(y)
+    compex_image = wbox.cwt(y, decimate=bitrate / 50)
 
-    abs_image = np.abs(compex_image)
-
-    image = interpolation.zoom(abs_image, (1, 1. * 50 / bitrate))
+    image = np.abs(compex_image)
 
     ax = plt.subplot(1, n_images, j + 1)
     ax.set_xticklabels( () )
