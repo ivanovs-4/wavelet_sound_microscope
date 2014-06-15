@@ -38,6 +38,7 @@ class WaveletBox(object):
 
     def cwt(self, data, decimate=None):
         x_arr = np.asarray(data, dtype=np.complex64) - np.mean(data)
+        x_width = x_arr.shape[0]
 
         if x_arr.ndim is not 1:
             raise ValueError('data must be an 1d numpy array or list')
@@ -45,12 +46,12 @@ class WaveletBox(object):
         assert x_arr.shape[0] == self.wft.shape[1]
 
         if decimate:
-            width = len(self.wft[0][::decimate])
+            result_width = len(self.wft[0][::decimate])
 
         else:
-            width = self.wft.shape[1]
+            result_width = self.wft.shape[1]
 
-        complex_image = np.empty((self.wft.shape[0], width),
+        complex_image = np.empty((self.wft.shape[0], result_width),
                                  dtype=np.complex64)
 
         gpu_x_arr_ft = gpuarray.to_gpu(x_arr)
@@ -64,7 +65,12 @@ class WaveletBox(object):
             self.plan.execute(gpu_med, inverse=True)
 
             if decimate:
-                complex_image[i] = gpu_med.get()[::decimate]
+                reshaped = gpu_med.reshape((result_width,
+                                            x_width / result_width))
+
+                gpu_decimated = extract_columns(reshaped, 0, 1).ravel()
+
+                complex_image[i] = gpu_decimated.get()
 
             else:
                 complex_image[i] = gpu_med.get()
@@ -177,3 +183,27 @@ def icwt(X, dt, scales, p=2):
 
     return x
 '''
+
+
+def extract_columns(mat, start, stop):
+    stop = stop or start + 1
+    dtype = mat.dtype
+    itemsize = np.dtype(dtype).itemsize
+    N, M = mat.shape
+    m = stop - start
+
+    assert mat.flags.c_contiguous
+    assert 0 <= start < stop <= M
+
+    new_mat = gpuarray.empty((N, m), dtype)
+
+    copy = cuda.Memcpy2D()
+    copy.set_src_device(mat.gpudata)
+    copy.src_x_in_bytes = start * itemsize  # First column offset in bytes
+    copy.set_dst_device(new_mat.gpudata)
+    copy.src_pitch = M * itemsize  # Source array row width in bytes
+    copy.dst_pitch = copy.width_in_bytes = m * itemsize  # Width of sliced row
+    copy.height = N
+    copy(aligned=True)
+
+    return new_mat
