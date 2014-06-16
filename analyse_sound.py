@@ -83,3 +83,6 @@ if __name__ == '__main__':
         image_file = os.path.join(results_path, image_file_name)
 
         img.save(image_file)
+
+    # can montage results with command:
+    # $montage +frame +shadow +label -tile x1 -geometry +0+0 sample/* /tmp/g.jpg
