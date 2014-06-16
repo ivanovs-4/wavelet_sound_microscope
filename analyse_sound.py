@@ -4,9 +4,9 @@ import sys
 from subprocess import check_call
 
 import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
+from matplotlib.colors import LinearSegmentedColormap
 from pysoundfile import SoundFile
+from scipy.misc import toimage
 
 from wavelet_analyse.cuda_backend import WaveletBox
 
@@ -23,8 +23,19 @@ def normalize_image(m):
     return m / np.max(np.abs(m))
 
 
+cmap = LinearSegmentedColormap.from_list(
+    'lightfire',
+    sorted([
+        (1, (1, 1, 1)),
+        (0.6, (1, .6, 0)),
+        (0.4, (.8, .2, .2)),
+        (0.1, (.5, .2, .2)),
+        (0, (0, 0, 0)),
+    ])
+)
+
 def apply_colormap(image):
-    return image * 255
+    return 255 * cmap(image)[:, :, :3]
 
 
 if __name__ == '__main__':
@@ -64,7 +75,7 @@ if __name__ == '__main__':
 
         mapped_image = apply_colormap(normal_image)
 
-        img = Image.fromarray(mapped_image).convert('RGB')
+        img = toimage(mapped_image)
 
         image_file_name = '{:03d}_{}.png'.format(j, sound_name)
         print image_file_name
