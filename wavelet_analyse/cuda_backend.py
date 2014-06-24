@@ -12,6 +12,18 @@ BACKEND = 'cuda'
 PI2 = 2 * np.pi
 
 
+gpu_morlet = ElementwiseKernel(
+    'pycuda::complex<float> *dest, '
+    'float normal_pi_sqr_1_4, '
+    'float scale, '
+    'float *angular_frequencies, '
+    'float omega0',
+    'dest[i] = normal_pi_sqr_1_4 * powf(exp(-(scale * angular_frequencies[i] - omega0)), 2.0) / 2.0',
+    'gpu_morlet',
+    preamble='''#include <pycuda-complex.hpp>'''
+)
+
+
 multiply_them = ElementwiseKernel(
     "pycuda::complex<float> *dest, pycuda::complex<float> *left, pycuda::complex<float> *right",
     "dest[i] = left[i] * right[i]",
