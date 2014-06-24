@@ -33,8 +33,8 @@ multiply_them = ElementwiseKernel(
 
 
 class WaveletBox(object):
-    def __init__(self, nsamples, time_step=1, dj=1/9., p=np.pi):
-        self.scales = self.autoscales(nsamples, time_step, dj, np.pi)
+    def __init__(self, nsamples, time_step=1, scale_resolution=1/9., p=np.pi):
+        self.scales = self.autoscales(nsamples, time_step, scale_resolution, np.pi)
         self.angular_frequencies = angularfreq(nsamples=nsamples, time_step=time_step)
 
         self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p,
@@ -90,14 +90,14 @@ class WaveletBox(object):
         return complex_image
 
 
-    def autoscales(self, nsamples, time_step, dj, p):
+    def autoscales(self, nsamples, time_step, scale_resolution, p):
         """
         Compute scales as fractional power of two.
 
         :Parameters:
             nsamples : integer : umber of data samples
             time_step : float : time step
-            dj : float : scale resolution
+            scale_resolution : float : scale resolution
             p : float : omega0 ('morlet')
 
         :Returns:
@@ -106,9 +106,9 @@ class WaveletBox(object):
 
         s0 = (time_step * (p + np.sqrt(2 + p**2))) / PI2
 
-        J = int(np.floor(dj**-1 * np.log2((nsamples * time_step) / s0)))
+        J = int(np.floor(scale_resolution**-1 * np.log2((nsamples * time_step) / s0)))
 
-        return np.fromiter((s0 * 2**(i * dj) for i in range(J + 1)),
+        return np.fromiter((s0 * 2**(i * scale_resolution) for i in range(J + 1)),
                            np.float, J + 1)
 
 
