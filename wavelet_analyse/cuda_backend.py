@@ -33,11 +33,11 @@ multiply_them = ElementwiseKernel(
 
 
 class WaveletBox(object):
-    def __init__(self, nsamples, time_step=1, scale_resolution=1/9., p=np.pi):
+    def __init__(self, nsamples, time_step=1, scale_resolution=1/9., omega0=np.pi):
         self.scales = self.autoscales(nsamples, time_step, scale_resolution, np.pi)
         self.angular_frequencies = angularfreq(nsamples=nsamples, time_step=time_step)
 
-        self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p,
+        self.wft = morletft(s=self.scales, w=self.angular_frequencies, omega0=omega0,
                             time_step=time_step)
 
         self.wft_gpu_i = [gpuarray.to_gpu(np.array(wft_i, dtype=np.complex64))
@@ -90,7 +90,7 @@ class WaveletBox(object):
         return complex_image
 
 
-    def autoscales(self, nsamples, time_step, scale_resolution, p):
+    def autoscales(self, nsamples, time_step, scale_resolution, omega0):
         """
         Compute scales as fractional power of two.
 
@@ -98,13 +98,13 @@ class WaveletBox(object):
             nsamples : integer : umber of data samples
             time_step : float : time step
             scale_resolution : float : scale resolution
-            p : float : omega0 ('morlet')
+            omega0 : float : omega0 ('morlet')
 
         :Returns:
             scales : 1d numpy array
         """
 
-        s0 = (time_step * (p + np.sqrt(2 + p**2))) / PI2
+        s0 = (time_step * (omega0 + np.sqrt(2 + omega0**2))) / PI2
 
         J = int(np.floor(scale_resolution**-1 * np.log2((nsamples * time_step) / s0)))
 
@@ -116,13 +116,13 @@ def normalization(s, time_step):
     return np.sqrt(PI2 * s / time_step)
 
 
-def morletft(s, w, w0, time_step):
+def morletft(s, w, omega0, time_step):
     """Fourier tranformed morlet function.
 
     Input
       * *s*    - scales
       * *w*    - angular frequencies
-      * *w0*   - omega0 (frequency)
+      * *omega0*   - omega0 (frequency)
       * *time_step*   - time step
     Output
       * (normalized) fourier transformed morlet function
@@ -134,7 +134,7 @@ def morletft(s, w, w0, time_step):
 
     for i in range(s.shape[0]):
         n = normalization(s[i], time_step)
-        wavelet[i][pos] = n * p * np.exp(-(s[i] * w[pos] - w0)**2 / 2.0)
+        wavelet[i][pos] = n * p * np.exp(-(s[i] * w[pos] - omega0)**2 / 2.0)
 
     return wavelet
 
@@ -164,7 +164,7 @@ def angularfreq(nsamples, time_step):
 
 
 '''
-def icwt(X, time_step, scales, p=2):
+def icwt(X, time_step, scales, omega0=2):
     """Inverse Continuous Wavelet Tranform.
     The reconstruction factor is not applied.
 
