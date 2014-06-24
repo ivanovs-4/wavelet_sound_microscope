@@ -37,15 +37,13 @@ multiply_them = ElementwiseKernel(
 
 class WaveletBox(object):
     def __init__(self, nsamples, time_step, scale_resolution, omega0):
+        self.nsamples = nsamples
         self.scales = self.autoscales(nsamples, time_step,
                                       scale_resolution, omega0)
         self.angular_frequencies = angularfreq(nsamples, time_step)
 
-        self.wft = morletft(self.scales, self.angular_frequencies,
-                            omega0, time_step)
-
-        self.wft_gpu_i = [gpuarray.to_gpu(np.array(wft_i, dtype=np.complex64))
-                          for wft_i in self.wft]
+        self.wft_gpu_i = gpu_morletft(self.scales, self.angular_frequencies,
+                                      omega0, time_step)
 
         stream = cuda.Stream()
 
@@ -59,15 +57,15 @@ class WaveletBox(object):
         if x_arr.ndim is not 1:
             raise ValueError('data must be an 1d numpy array or list')
 
-        assert x_arr.shape[0] == self.wft.shape[1]
+        assert x_arr.shape[0] == self.nsamples
 
         if decimate:
-            result_width = len(self.wft[0][::decimate])
+            result_width = len(list(range(self.nsamples))[::decimate])
 
         else:
-            result_width = self.wft.shape[1]
+            result_width = self.nsamples
 
-        complex_image = np.empty((self.wft.shape[0], result_width),
+        complex_image = np.empty((self.scales.shape[0], result_width),
                                  dtype=np.complex64)
 
         gpu_x_arr_ft = gpuarray.to_gpu(x_arr)
@@ -112,7 +110,7 @@ def normalization(scale, time_step):
     return np.sqrt(PI2 * scale / time_step)
 
 
-def morletft(scales, angular_frequencies, omega0, time_step):
+def gpu_morletft(scales, angular_frequencies, omega0, time_step):
     """ Fourier tranformed morlet function """
 
     pi_sqr_1_4 = 0.75112554446494251 # pi**(-1.0/4.0)
@@ -125,7 +123,10 @@ def morletft(scales, angular_frequencies, omega0, time_step):
         wavelet[i][pos] = norma * pi_sqr_1_4 * \
             np.exp(-(scales[i] * angular_frequencies[pos] - omega0)**2 / 2.0)
 
-    return wavelet
+    return [
+        gpuarray.to_gpu(np.array(wft_i, dtype=np.complex64))
+        for wft_i in wavelet
+    ]
 
 
 def angularfreq(nsamples, time_step):
