@@ -115,14 +115,14 @@ def normalization(scale, time_step):
 def morletft(scales, angular_frequencies, omega0, time_step):
     """ Fourier tranformed morlet function """
 
-    p = 0.75112554446494251 # pi**(-1.0/4.0)
+    pi_sqr_1_4 = 0.75112554446494251 # pi**(-1.0/4.0)
     wavelet = np.zeros((scales.shape[0], angular_frequencies.shape[0]))
     pos = angular_frequencies > 0
 
     for i in range(scales.shape[0]):
-        n = normalization(scales[i], time_step)
+        norma = normalization(scales[i], time_step)
 
-        wavelet[i][pos] = n * p * \
+        wavelet[i][pos] = norma * pi_sqr_1_4 * \
             np.exp(-(scales[i] * angular_frequencies[pos] - omega0)**2 / 2.0)
 
     return wavelet
