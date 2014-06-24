@@ -60,7 +60,7 @@ def main(source_sound_file):
     echo('Bitrate: {}'.format(bitrate))
     echo('N samples: {}'.format(nsamples))
 
-    wbox = WaveletBox(nsamples=nsamples, time_step=1, scale_resolution=1/24., omega0=40)
+    wbox = WaveletBox(nsamples, time_step=1, scale_resolution=1/24., omega0=40)
 
     ipieces = gen_pieces(sf, nsamples)
 

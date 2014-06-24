@@ -33,12 +33,12 @@ multiply_them = ElementwiseKernel(
 
 
 class WaveletBox(object):
-    def __init__(self, nsamples, time_step=1, scale_resolution=1/9., omega0=np.pi):
-        self.scales = self.autoscales(nsamples, time_step, scale_resolution, np.pi)
-        self.angular_frequencies = angularfreq(nsamples=nsamples, time_step=time_step)
+    def __init__(self, nsamples, time_step, scale_resolution, omega0):
+        self.scales = self.autoscales(nsamples, time_step, scale_resolution, omega0)
+        self.angular_frequencies = angularfreq(nsamples, time_step)
 
-        self.wft = morletft(s=self.scales, w=self.angular_frequencies, omega0=omega0,
-                            time_step=time_step)
+        self.wft = morletft(self.scales, self.angular_frequencies, omega0,
+                            time_step)
 
         self.wft_gpu_i = [gpuarray.to_gpu(np.array(wft_i, dtype=np.complex64))
                           for wft_i in self.wft]
