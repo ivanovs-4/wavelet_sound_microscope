@@ -14,12 +14,12 @@ from scipy.misc import toimage
 from wavelet_analyse.cuda_backend import WaveletBox
 
 
-def gen_pieces(sf, n_samples):
-    wav = sf.read(n_samples)
+def gen_pieces(sf, nsamples):
+    wav = sf.read(nsamples)
 
     while len(wav):
-        yield np.pad(wav[:, 0], (0, n_samples - len(wav)), 'constant')
-        wav = sf.read(n_samples)
+        yield np.pad(wav[:, 0], (0, nsamples - len(wav)), 'constant')
+        wav = sf.read(nsamples)
 
 
 def normalize_image(m):
@@ -54,18 +54,18 @@ def main(source_sound_file):
     shutil.rmtree(results_path, ignore_errors=True)
     os.mkdir(results_path)
 
-    # Make n_samples as power of two. More than one second
-    n_samples = 2**(1 + int(np.log2(bitrate - 1)))
+    # Make nsamples as power of two. More than one second
+    nsamples = 2**(1 + int(np.log2(bitrate - 1)))
 
     echo('Bitrate: {}'.format(bitrate))
-    echo('N samples: {}'.format(n_samples))
+    echo('N samples: {}'.format(nsamples))
 
-    wbox = WaveletBox(N=n_samples, dt=1, dj=1/24., p=40)
+    wbox = WaveletBox(nsamples=nsamples, dt=1, dj=1/24., p=40)
 
-    ipieces = gen_pieces(sf, n_samples)
+    ipieces = gen_pieces(sf, nsamples)
 
     for j, sample in enumerate(ipieces, 1):
-        compex_image = wbox.cwt(sample, decimate=n_samples / 128)
+        compex_image = wbox.cwt(sample, decimate=nsamples / 128)
 
         abs_image = np.abs(compex_image)
 

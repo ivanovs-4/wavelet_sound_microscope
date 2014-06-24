@@ -33,9 +33,9 @@ multiply_them = ElementwiseKernel(
 
 
 class WaveletBox(object):
-    def __init__(self, N, dt=1, dj=1/9., p=np.pi):
-        self.scales = self.autoscales(N, dt, dj, np.pi)
-        self.angular_frequencies = angularfreq(N=N, dt=dt)
+    def __init__(self, nsamples, dt=1, dj=1/9., p=np.pi):
+        self.scales = self.autoscales(nsamples, dt, dj, np.pi)
+        self.angular_frequencies = angularfreq(nsamples=nsamples, dt=dt)
 
         self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p,
                             dt=dt)
@@ -45,7 +45,7 @@ class WaveletBox(object):
 
         stream = cuda.Stream()
 
-        self.plan = Plan((N,), stream=stream)
+        self.plan = Plan((nsamples,), stream=stream)
 
 
     def cwt(self, data, decimate=None):
@@ -90,12 +90,12 @@ class WaveletBox(object):
         return complex_image
 
 
-    def autoscales(self, N, dt, dj, p):
+    def autoscales(self, nsamples, dt, dj, p):
         """
         Compute scales as fractional power of two.
 
         :Parameters:
-            N : integer : umber of data samples
+            nsamples : integer : umber of data samples
             dt : float : time step
             dj : float : scale resolution
             p : float : omega0 ('morlet')
@@ -106,7 +106,7 @@ class WaveletBox(object):
 
         s0 = (dt * (p + np.sqrt(2 + p**2))) / PI2
 
-        J = int(np.floor(dj**-1 * np.log2((N * dt) / s0)))
+        J = int(np.floor(dj**-1 * np.log2((nsamples * dt) / s0)))
 
         return np.fromiter((s0 * 2**(i * dj) for i in range(J + 1)),
                            np.float, J + 1)
@@ -139,11 +139,11 @@ def morletft(s, w, w0, dt):
     return wavelet
 
 
-def angularfreq(N, dt):
+def angularfreq(nsamples, dt):
     """Compute angular frequencies.
 
     :Parameters:
-       N : integer
+       nsamples : integer
           number of data samples
        dt : float
           time step
@@ -152,14 +152,14 @@ def angularfreq(N, dt):
         angular frequencies : 1d numpy array
     """
 
-    N2 = N / 2.0
+    N2 = nsamples / 2.0
 
     return np.fromiter(
         (
-            PI2 * (i if i <= N2 else i - N) / (N * dt)
-            for i in range(N)
+            PI2 * (i if i <= N2 else i - nsamples) / (nsamples * dt)
+            for i in range(nsamples)
         ),
-        np.float, N
+        np.float, nsamples
     )
 
 
