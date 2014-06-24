@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 import os
 import shutil
 import sys
 from subprocess import check_call
 
+import click
+from click import echo
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from pysoundfile import SoundFile
@@ -38,18 +41,13 @@ def apply_colormap(image):
     return 255 * cmap(image)[:, :, :3]
 
 
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('soundfile')
-
-    values = parser.parse_args()
-
-    sf = SoundFile(values.soundfile)
+@click.command()
+@click.argument('source_sound_file', type=click.Path(exists=True))
+def main(source_sound_file):
+    sf = SoundFile(source_sound_file)
     bitrate = sf.sample_rate
 
-    file_dir, file_name = os.path.split(values.soundfile)
+    file_dir, file_name = os.path.split(source_sound_file)
     sound_name, ext = os.path.splitext(file_name)
 
     results_path = os.path.abspath(os.path.join('.', sound_name))
@@ -59,8 +57,8 @@ if __name__ == '__main__':
     # Make n_samples as power of two. More than one second
     n_samples = 2**(1 + int(np.log2(bitrate - 1)))
 
-    print 'Bitrate:', bitrate
-    print 'N samples:', n_samples
+    echo('Bitrate: {}'.format(bitrate))
+    echo('N samples: {}'.format(n_samples))
 
     wbox = WaveletBox(N=n_samples, dt=1, dj=1/24., p=40)
 
@@ -78,7 +76,7 @@ if __name__ == '__main__':
         img = toimage(mapped_image)
 
         image_file_name = '{:03d}_{}.png'.format(j, sound_name)
-        print image_file_name
+        echo(image_file_name)
 
         image_file = os.path.join(results_path, image_file_name)
 
@@ -86,3 +84,7 @@ if __name__ == '__main__':
 
     # can montage results with command:
     # $montage +frame +shadow +label -tile x1 -geometry +0+0 sample/* /tmp/g.jpg
+
+
+if __name__ == '__main__':
+    main()
