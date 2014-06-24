@@ -18,14 +18,17 @@ gpu_morlet = ElementwiseKernel(
     'float scale, '
     'float *angular_frequencies, '
     'float omega0',
-    'dest[i] = normal_pi_sqr_1_4 * powf(exp(-(scale * angular_frequencies[i] - omega0)), 2.0) / 2.0',
+    'dest[i] = normal_pi_sqr_1_4 * '
+    'powf(exp(-(scale * angular_frequencies[i] - omega0)), 2.0) / 2.0',
     'gpu_morlet',
     preamble='''#include <pycuda-complex.hpp>'''
 )
 
 
 multiply_them = ElementwiseKernel(
-    "pycuda::complex<float> *dest, pycuda::complex<float> *left, pycuda::complex<float> *right",
+    "pycuda::complex<float> *dest, "
+    "pycuda::complex<float> *left, "
+    "pycuda::complex<float> *right",
     "dest[i] = left[i] * right[i]",
     "multiply_them",
     preamble='''#include <pycuda-complex.hpp>'''
@@ -34,11 +37,12 @@ multiply_them = ElementwiseKernel(
 
 class WaveletBox(object):
     def __init__(self, nsamples, time_step, scale_resolution, omega0):
-        self.scales = self.autoscales(nsamples, time_step, scale_resolution, omega0)
+        self.scales = self.autoscales(nsamples, time_step,
+                                      scale_resolution, omega0)
         self.angular_frequencies = angularfreq(nsamples, time_step)
 
-        self.wft = morletft(self.scales, self.angular_frequencies, omega0,
-                            time_step)
+        self.wft = morletft(self.scales, self.angular_frequencies,
+                            omega0, time_step)
 
         self.wft_gpu_i = [gpuarray.to_gpu(np.array(wft_i, dtype=np.complex64))
                           for wft_i in self.wft]
@@ -95,10 +99,13 @@ class WaveletBox(object):
 
         s0 = (time_step * (omega0 + np.sqrt(2 + omega0**2))) / PI2
 
-        J = int(np.floor(scale_resolution**-1 * np.log2((nsamples * time_step) / s0)))
+        J = int(np.floor(scale_resolution**-1 *
+                         np.log2((nsamples * time_step) / s0)))
 
-        return np.fromiter((s0 * 2**(i * scale_resolution) for i in range(J + 1)),
-                           np.float, J + 1)
+        return np.fromiter(
+            (s0 * 2**(i * scale_resolution) for i in range(J + 1)),
+            np.float, J + 1
+        )
 
 
 def normalization(scale, time_step):
@@ -114,7 +121,9 @@ def morletft(scales, angular_frequencies, omega0, time_step):
 
     for i in range(scales.shape[0]):
         n = normalization(scales[i], time_step)
-        wavelet[i][pos] = n * p * np.exp(-(scales[i] * angular_frequencies[pos] - omega0)**2 / 2.0)
+
+        wavelet[i][pos] = n * p * \
+            np.exp(-(scales[i] * angular_frequencies[pos] - omega0)**2 / 2.0)
 
     return wavelet
 

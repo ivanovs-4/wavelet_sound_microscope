@@ -82,8 +82,8 @@ def main(source_sound_file):
 
         img.save(image_file)
 
-    # can montage results with command:
-    # $montage +frame +shadow +label -tile x1 -geometry +0+0 sample/* /tmp/g.jpg
+# can montage results with command:
+# $montage +frame +shadow +label -tile x1 -geometry +0+0 sample/* /tmp/g.jpg
 
 
 if __name__ == '__main__':
