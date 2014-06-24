@@ -91,18 +91,7 @@ class WaveletBox(object):
 
 
     def autoscales(self, nsamples, time_step, scale_resolution, omega0):
-        """
-        Compute scales as fractional power of two.
-
-        :Parameters:
-            nsamples : integer : umber of data samples
-            time_step : float : time step
-            scale_resolution : float : scale resolution
-            omega0 : float : omega0 ('morlet')
-
-        :Returns:
-            scales : 1d numpy array
-        """
+        """ Compute scales as fractional power of two """
 
         s0 = (time_step * (omega0 + np.sqrt(2 + omega0**2))) / PI2
 
@@ -117,16 +106,7 @@ def normalization(scale, time_step):
 
 
 def morletft(scales, angular_frequencies, omega0, time_step):
-    """Fourier tranformed morlet function.
-
-    Input
-      * *scales*    - scales
-      * *angular_frequencies*    - angular frequencies
-      * *omega0*   - omega0 (frequency)
-      * *time_step*   - time step
-    Output
-      * (normalized) fourier transformed morlet function
-    """
+    """ Fourier tranformed morlet function """
 
     p = 0.75112554446494251 # pi**(-1.0/4.0)
     wavelet = np.zeros((scales.shape[0], angular_frequencies.shape[0]))
@@ -140,17 +120,7 @@ def morletft(scales, angular_frequencies, omega0, time_step):
 
 
 def angularfreq(nsamples, time_step):
-    """Compute angular frequencies.
-
-    :Parameters:
-       nsamples : integer
-          number of data samples
-       time_step : float
-          time step
-
-    :Returns:
-        angular frequencies : 1d numpy array
-    """
+    """ Compute angular frequencies """
 
     N2 = nsamples / 2.0
 
@@ -165,20 +135,9 @@ def angularfreq(nsamples, time_step):
 
 '''
 def icwt(X, time_step, scales, omega0=2):
-    """Inverse Continuous Wavelet Tranform.
+    """
+    Inverse Continuous Wavelet Tranform.
     The reconstruction factor is not applied.
-
-    :Parameters:
-       X : 2d array_like object
-          transformed data
-       time_step : float
-          time step
-       scales : 1d array_like object
-          scales
-
-    :Returns:
-       x : 1d numpy array
-          data
     """
 
     X_arr = asarray(X)
