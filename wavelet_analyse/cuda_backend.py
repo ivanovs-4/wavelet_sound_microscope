@@ -112,15 +112,15 @@ class WaveletBox(object):
                            np.float, J + 1)
 
 
-def normalization(s, time_step):
-    return np.sqrt(PI2 * s / time_step)
+def normalization(scale, time_step):
+    return np.sqrt(PI2 * scale / time_step)
 
 
-def morletft(s, w, omega0, time_step):
+def morletft(scales, w, omega0, time_step):
     """Fourier tranformed morlet function.
 
     Input
-      * *s*    - scales
+      * *scales*    - scales
       * *w*    - angular frequencies
       * *omega0*   - omega0 (frequency)
       * *time_step*   - time step
@@ -129,12 +129,12 @@ def morletft(s, w, omega0, time_step):
     """
 
     p = 0.75112554446494251 # pi**(-1.0/4.0)
-    wavelet = np.zeros((s.shape[0], w.shape[0]))
+    wavelet = np.zeros((scales.shape[0], w.shape[0]))
     pos = w > 0
 
-    for i in range(s.shape[0]):
-        n = normalization(s[i], time_step)
-        wavelet[i][pos] = n * p * np.exp(-(s[i] * w[pos] - omega0)**2 / 2.0)
+    for i in range(scales.shape[0]):
+        n = normalization(scales[i], time_step)
+        wavelet[i][pos] = n * p * np.exp(-(scales[i] * w[pos] - omega0)**2 / 2.0)
 
     return wavelet
 
