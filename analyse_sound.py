@@ -23,7 +23,12 @@ def gen_pieces(sf, nsamples):
 
 
 def normalize_image(m):
-    return m / np.max(np.abs(m))
+    norma = np.max(np.abs(m))
+
+    if norma == 0 or norma == float('inf'):
+        return m
+
+    return m / norma
 
 
 cmap = LinearSegmentedColormap.from_list(

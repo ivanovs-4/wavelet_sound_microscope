@@ -12,15 +12,23 @@ BACKEND = 'cuda'
 PI2 = 2 * np.pi
 
 
-gpu_morlet = ElementwiseKernel(
+calculate_morlet = ElementwiseKernel(
     'pycuda::complex<float> *dest, '
     'float normal_pi_sqr_1_4, '
     'float scale, '
     'float *angular_frequencies, '
     'float omega0',
-    'dest[i] = normal_pi_sqr_1_4 * '
-    'powf(exp(-(scale * angular_frequencies[i] - omega0)), 2.0) / 2.0',
-    'gpu_morlet',
+    '''
+        if(angular_frequencies[i] > 0) {
+            dest[i] = normal_pi_sqr_1_4 *
+                expf(-powf(scale * angular_frequencies[i] -
+                           omega0, 2.0) / 2.0);
+        }
+        else {
+            dest[i] = 0;
+        }
+    ''',
+    'calculate_morlet',
     preamble='''#include <pycuda-complex.hpp>'''
 )
 
@@ -42,8 +50,8 @@ class WaveletBox(object):
                                       scale_resolution, omega0)
         self.angular_frequencies = angularfreq(nsamples, time_step)
 
-        self.wft_gpu_i = gpu_morletft(self.scales, self.angular_frequencies,
-                                      omega0, time_step)
+        self.wft = morlet_ft_box(self.scales, self.angular_frequencies,
+                                 omega0, time_step)
 
         stream = cuda.Stream()
 
@@ -74,7 +82,7 @@ class WaveletBox(object):
         gpu_med = gpuarray.empty_like(gpu_x_arr_ft)
 
         for i in range(complex_image.shape[0]):
-            multiply_them(gpu_med, gpu_x_arr_ft, self.wft_gpu_i[i])
+            multiply_them(gpu_med, gpu_x_arr_ft, self.wft[i])
 
             self.plan.execute(gpu_med, inverse=True)
 
@@ -102,7 +110,7 @@ class WaveletBox(object):
 
         return np.fromiter(
             (s0 * 2**(i * scale_resolution) for i in range(J + 1)),
-            np.float, J + 1
+            np.float32, J + 1
         )
 
 
@@ -110,23 +118,32 @@ def normalization(scale, time_step):
     return np.sqrt(PI2 * scale / time_step)
 
 
-def gpu_morletft(scales, angular_frequencies, omega0, time_step):
+def morlet_ft_box(scales, angular_frequencies, omega0, time_step):
     """ Fourier tranformed morlet function """
 
     pi_sqr_1_4 = 0.75112554446494251 # pi**(-1.0/4.0)
-    wavelet = np.zeros((scales.shape[0], angular_frequencies.shape[0]))
-    pos = angular_frequencies > 0
+
+    wavelet = range(scales.shape[0])
+
+    gpu_angular_frequencies = gpuarray.to_gpu(angular_frequencies)
 
     for i in range(scales.shape[0]):
         norma = normalization(scales[i], time_step)
 
-        wavelet[i][pos] = norma * pi_sqr_1_4 * \
-            np.exp(-(scales[i] * angular_frequencies[pos] - omega0)**2 / 2.0)
+        wavelet[i] = gpuarray.empty(
+            (angular_frequencies.shape[0],),
+            dtype=np.complex64
+        )
 
-    return [
-        gpuarray.to_gpu(np.array(wft_i, dtype=np.complex64))
-        for wft_i in wavelet
-    ]
+        calculate_morlet(
+            wavelet[i],
+            norma * pi_sqr_1_4,
+            scales[i],
+            gpu_angular_frequencies,
+            omega0
+        )
+
+    return wavelet
 
 
 def angularfreq(nsamples, time_step):
@@ -139,7 +156,7 @@ def angularfreq(nsamples, time_step):
             PI2 * (i if i <= N2 else i - nsamples) / (nsamples * time_step)
             for i in range(nsamples)
         ),
-        np.float, nsamples
+        np.float32, nsamples
     )
 
 
