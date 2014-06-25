@@ -35,9 +35,10 @@ cmap = LinearSegmentedColormap.from_list(
     'lightfire',
     sorted([
         (1, (1, 1, 1)),
-        (0.6, (1, .6, 0)),
-        (0.4, (.8, .2, .2)),
-        (0.1, (.5, .2, .2)),
+        (0.6, (1, .8, .3)),
+        (0.4, (.8, .7, .1)),
+        (0.2, (.0, .4, .7)),
+        (0.05, (.0, .0, .6)),
         (0, (0, 0, 0)),
     ])
 )
@@ -48,7 +49,8 @@ def apply_colormap(image):
 
 @click.command()
 @click.argument('source_sound_file', type=click.Path(exists=True))
-def main(source_sound_file):
+@click.option('--montage', is_flag=True, default=False)
+def main(source_sound_file, montage):
     sf = SoundFile(source_sound_file)
     bitrate = sf.sample_rate
 
@@ -69,6 +71,8 @@ def main(source_sound_file):
 
     ipieces = gen_pieces(sf, nsamples)
 
+    image_files = []
+
     for j, sample in enumerate(ipieces, 1):
         compex_image = wbox.cwt(sample, decimate=nsamples / 128)
 
@@ -87,8 +91,19 @@ def main(source_sound_file):
 
         img.save(image_file)
 
-# can montage results with command:
-# $montage +frame +shadow +label -tile x1 -geometry +0+0 sample/* /tmp/g.jpg
+        image_files.append(image_file)
+
+    if montage:
+        full_image_file_name = '{}.jpg'.format(sound_name)
+
+        full_image_file = os.path.join(results_path, full_image_file_name)
+
+        check_call(
+            'montage +frame +shadow +label -tile x1 -geometry +0+0'.split() +
+            image_files + [full_image_file]
+        )
+
+        echo(u'Montaged: {}'.format(full_image_file))
 
 
 if __name__ == '__main__':
