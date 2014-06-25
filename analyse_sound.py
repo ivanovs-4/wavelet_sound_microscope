@@ -14,12 +14,29 @@ from scipy.misc import toimage
 from wavelet_analyse.cuda_backend import WaveletBox
 
 
-def gen_pieces(sf, nsamples):
-    wav = sf.read(nsamples)
+def gen_pieces(sf, nsamples, overlap=0):
+    gap = [0 for j in range(overlap / 2)]
 
-    while len(wav):
-        yield np.pad(wav[:, 0], (0, nsamples - len(wav)), 'constant')
-        wav = sf.read(nsamples)
+    len_prev_readed = nsamples + 1
+
+    while len_prev_readed >= nsamples - overlap:
+        wav = sf.read(nsamples - len(gap))
+
+        channel_wav = wav[:, 0]
+
+        len_prev_readed = len(channel_wav)
+
+        fragment = np.concatenate((gap, channel_wav), axis=0)
+
+        fragment = np.pad(
+            fragment,
+            (0, nsamples - len(fragment)),
+            'constant'
+        )
+
+        yield fragment
+
+        gap = fragment[-overlap:]
 
 
 def normalize_image(m):
@@ -50,7 +67,8 @@ def apply_colormap(image):
 @click.command()
 @click.argument('source_sound_file', type=click.Path(exists=True))
 @click.option('--montage', is_flag=True, default=False)
-def main(source_sound_file, montage):
+@click.option('--overlap_factor', type=int, default=8)
+def main(source_sound_file, montage, overlap_factor):
     sf = SoundFile(source_sound_file)
     bitrate = sf.sample_rate
 
@@ -64,14 +82,23 @@ def main(source_sound_file, montage):
     # Make nsamples as power of two. More than one second
     nsamples = 2**(1 + int(np.log2(bitrate - 1)))
 
+    decimate = nsamples / 128
+
     echo('Bitrate: {}'.format(bitrate))
-    echo('N samples: {}'.format(nsamples))
+    echo('Sound samples: {}'.format(sf.frames))
+    echo('Fragment samples: {}'.format(nsamples))
+    echo('Overlap factor: {}'.format(overlap_factor))
 
     wbox = WaveletBox(nsamples, time_step=1, scale_resolution=1/24., omega0=40)
 
-    ipieces = gen_pieces(sf, nsamples)
+    overlap = nsamples / overlap_factor
 
-    pieces_count = ((sf.frames - 1) / nsamples) + 1
+    decimated_half_overlap = overlap / decimate / 2
+
+    ipieces = gen_pieces(sf, nsamples, overlap)
+
+    pieces_count = ((sf.frames - 1) /
+                    (nsamples - overlap)) + 1
 
     image_files = []
 
@@ -84,9 +111,13 @@ def main(source_sound_file, montage):
         fill_char=click.style('#', fg='magenta')
     ) as bar:
         for j, sample in enumerate(bar, 1):
-            compex_image = wbox.cwt(sample, decimate=nsamples / 128)
+            complex_image = wbox.cwt(sample, decimate=decimate)
 
-            abs_image = np.abs(compex_image)
+            stripped_complex_image = complex_image[
+                :, decimated_half_overlap: -decimated_half_overlap
+            ]
+
+            abs_image = np.abs(stripped_complex_image)
 
             normal_image = normalize_image(abs_image)
 
