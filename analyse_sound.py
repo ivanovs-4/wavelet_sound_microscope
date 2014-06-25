@@ -71,27 +71,36 @@ def main(source_sound_file, montage):
 
     ipieces = gen_pieces(sf, nsamples)
 
+    pieces_count = ((sf.frames - 1) / nsamples) + 1
+
     image_files = []
 
-    for j, sample in enumerate(ipieces, 1):
-        compex_image = wbox.cwt(sample, decimate=nsamples / 128)
+    with click.progressbar(
+        ipieces,
+        length=pieces_count,
+        width=0,
+        show_percent=False,
+        label=u'Pieces count: {}'.format(pieces_count),
+        fill_char=click.style('#', fg='magenta')
+    ) as bar:
+        for j, sample in enumerate(bar, 1):
+            compex_image = wbox.cwt(sample, decimate=nsamples / 128)
 
-        abs_image = np.abs(compex_image)
+            abs_image = np.abs(compex_image)
 
-        normal_image = normalize_image(abs_image)
+            normal_image = normalize_image(abs_image)
 
-        mapped_image = apply_colormap(normal_image)
+            mapped_image = apply_colormap(normal_image)
 
-        img = toimage(mapped_image)
+            img = toimage(mapped_image)
 
-        image_file_name = '{:03d}_{}.png'.format(j, sound_name)
-        echo(image_file_name)
+            image_file_name = '{:03d}_{}.png'.format(j, sound_name)
 
-        image_file = os.path.join(results_path, image_file_name)
+            image_file = os.path.join(results_path, image_file_name)
 
-        img.save(image_file)
+            img.save(image_file)
 
-        image_files.append(image_file)
+            image_files.append(image_file)
 
     if montage:
         full_image_file_name = '{}.jpg'.format(sound_name)
