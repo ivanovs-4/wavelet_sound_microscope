@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-import shutil
 import sys
-from subprocess import check_call
 
 import click
 from click import echo
@@ -66,18 +64,14 @@ def apply_colormap(image):
 
 @click.command()
 @click.argument('source_sound_file', type=click.Path(exists=True))
-@click.option('--montage', is_flag=True, default=False)
-@click.option('--overlap_factor', type=int, default=8)
-def main(source_sound_file, montage, overlap_factor):
+@click.option('--overlap_factor', type=int, default=4)
+@click.option('--norma_window_len', type=int, default=301)
+def main(source_sound_file, overlap_factor, norma_window_len):
     sf = SoundFile(source_sound_file)
     bitrate = sf.sample_rate
 
     file_dir, file_name = os.path.split(source_sound_file)
     sound_name, ext = os.path.splitext(file_name)
-
-    results_path = os.path.abspath(os.path.join('.', sound_name))
-    shutil.rmtree(results_path, ignore_errors=True)
-    os.mkdir(results_path)
 
     # Make nsamples as power of two. More than one second
     nsamples = 2**(1 + int(np.log2(bitrate - 1)))
@@ -88,6 +82,9 @@ def main(source_sound_file, montage, overlap_factor):
     echo('Sound samples: {}'.format(sf.frames))
     echo('Fragment samples: {}'.format(nsamples))
     echo('Overlap factor: {}'.format(overlap_factor))
+
+    norma_window_len += 1 - (norma_window_len % 2)
+    echo(u'Norma window len {}'.format(norma_window_len))
 
     wbox = WaveletBox(nsamples, time_step=1, scale_resolution=1/24., omega0=40)
 
@@ -101,6 +98,8 @@ def main(source_sound_file, montage, overlap_factor):
                     (nsamples - overlap)) + 1
 
     image_files = []
+
+    slides = []
 
     with click.progressbar(
         ipieces,
@@ -119,31 +118,75 @@ def main(source_sound_file, montage, overlap_factor):
 
             abs_image = np.abs(stripped_complex_image)
 
-            normal_image = normalize_image(abs_image)
+            slides.append(abs_image)
 
-            mapped_image = apply_colormap(normal_image)
+    whole_image = np.concatenate(slides, axis=1)
+    nolmalize_horizontal_smooth(whole_image, norma_window_len)
+    mapped_image = apply_colormap(whole_image)
+    img = toimage(mapped_image)
+    whole_image_file_name = '{}.jpg'.format(sound_name)
+    whole_image_file = os.path.join('.', whole_image_file_name)
+    img.save(whole_image_file)
 
-            img = toimage(mapped_image)
 
-            image_file_name = '{:03d}_{}.png'.format(j, sound_name)
+def nolmalize_horizontal_smooth(arr, window_len):
+    maxes = np.abs(arr).max(axis=0)
 
-            image_file = os.path.join(results_path, image_file_name)
+    smoothed = smooth(maxes, window_len)
+    smoothed[smoothed == 0] = 1
 
-            img.save(image_file)
+    norma = smoothed * (maxes / smoothed).max()
 
-            image_files.append(image_file)
+    arr /= norma
 
-    if montage:
-        full_image_file_name = '{}.jpg'.format(sound_name)
 
-        full_image_file = os.path.join(results_path, full_image_file_name)
+def smooth(x, window_len=11, window='hanning'):
+    """
+    Smooth the data using a window with requested size
 
-        check_call(
-            'montage +frame +shadow +label -tile x1 -geometry +0+0'.split() +
-            image_files + [full_image_file]
-        )
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+    """
 
-        echo(u'Montaged: {}'.format(full_image_file))
+    if window_len % 2 != 1:
+        raise ValueError, "window_len must be odd"
+
+    if x.ndim != 1:
+        raise ValueError, "smooth only accepts 1 dimension arrays"
+
+    if x.size < window_len:
+        raise ValueError, "Input vector needs to be bigger than window size"
+
+    if window_len < 3:
+        return x
+
+    allowed = ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']
+
+    if window not in allowed:
+        raise ValueError, "Window is on of %s" % allowed
+
+    s = np.r_[x[window_len - 1: 0: -1], x, x[-1: -window_len: -1]]
+
+    if window == 'flat':  # moving average
+        w = np.ones(window_len, 'd')
+
+    else:
+        w = eval('np.' + window + '(window_len)')
+
+    y = np.convolve(w / w.sum(), s, mode='valid')
+
+    return y[(window_len / 2): -(window_len / 2)]
+
+
+def test_smooth():
+    assert smooth(np.linspace(-4, 4, 100)).shape[0] == 100
+    assert smooth(np.linspace(-4, 4, 101)).shape[0] == 101
+    assert smooth(np.linspace(-4, 4, 100), 13).shape[0] == 100
+    assert smooth(np.linspace(-4, 4, 101), 13).shape[0] == 101
+    assert smooth(np.linspace(-4, 4, 1000), 131).shape[0] == 1000
+    assert smooth(np.linspace(-4, 4, 1001), 131).shape[0] == 1001
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
 .*
 *.pyc
-/sample
+*.jpg
+*.png
