@@ -123,6 +123,13 @@ def main(source_sound_file, overlap_factor, norma_window_len):
     whole_image = np.concatenate(slides, axis=1)
     nolmalize_horizontal_smooth(whole_image, norma_window_len)
     mapped_image = apply_colormap(whole_image)
+
+    # Mark local maximums
+    mask = vertical_local_max_mask(smooth_vertical(whole_image, 7))
+    mask[whole_image > .1] = False
+    mask[whole_image < .02] = False
+    mapped_image[mask] = (0, 96, 0)
+
     img = toimage(mapped_image)
     whole_image_file_name = '{}.jpg'.format(sound_name)
     whole_image_file = os.path.join('.', whole_image_file_name)
@@ -138,6 +145,15 @@ def nolmalize_horizontal_smooth(arr, window_len):
     norma = smoothed * (maxes / smoothed).max()
 
     arr /= norma
+
+
+def smooth_vertical(arr, *args, **kwargs):
+    r = np.array([
+        smooth(column, *args, **kwargs)
+        for column in arr.T
+    ]).T
+
+    return r
 
 
 def smooth(x, window_len=11, window='hanning'):
@@ -187,6 +203,42 @@ def test_smooth():
     assert smooth(np.linspace(-4, 4, 101), 13).shape[0] == 101
     assert smooth(np.linspace(-4, 4, 1000), 131).shape[0] == 1000
     assert smooth(np.linspace(-4, 4, 1001), 131).shape[0] == 1001
+
+
+def vertical_local_max_mask(arr):
+    mask = (arr[2:] < arr[1:-1]) & (arr[1:-1] > arr[:-2])
+
+    return np.concatenate(
+        (
+            [np.zeros_like(mask[0]) > 0],
+            mask,
+            [np.zeros_like(mask[0]) > 0],
+        )
+    )
+
+
+
+def test_vertical_local_max_mask():
+    arr = np.array(
+        [
+            [1., 1,1],
+            [1,2,2],
+            [1,3,1],
+            [2,4,2],
+            [1,3,1]
+        ]
+    )
+
+    assert (
+        vertical_local_max_mask(arr) ==
+        [
+            [False, False, False],
+            [False, False,  True],
+            [False, False, False],
+            [ True,  True,  True],
+            [False, False, False],
+        ]
+    ).all()
 
 
 if __name__ == '__main__':
