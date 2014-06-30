@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+from itertools import chain, count, imap, islice, izip, tee, takewhile
 
 import click
 from click import echo
@@ -12,29 +13,16 @@ from scipy.misc import toimage
 from wavelet_analyse.cuda_backend import WaveletBox
 
 
-def gen_pieces(sf, nsamples, overlap=0):
-    gap = [0 for j in range(overlap / 2)]
+def one_channel(wav):
+    return wav[:, 0]
 
-    len_prev_readed = nsamples + 1
 
-    while len_prev_readed >= nsamples - overlap:
-        wav = sf.read(nsamples - len(gap))
-
-        channel_wav = wav[:, 0]
-
-        len_prev_readed = len(channel_wav)
-
-        fragment = np.concatenate((gap, channel_wav), axis=0)
-
-        fragment = np.pad(
-            fragment,
-            (0, nsamples - len(fragment)),
-            'constant'
-        )
-
-        yield fragment
-
-        gap = fragment[-overlap:]
+def gen_sound_pieces(sound_file, size):
+    pieces = takewhile(len, imap(lambda i: sound_file.read(size), count()))
+    return imap(
+        lambda sound: np.pad(sound, (0, size - len(sound)), 'constant'),
+        imap(one_channel, pieces)
+    )
 
 
 def normalize_image(m):
@@ -64,11 +52,10 @@ def apply_colormap(image):
 
 @click.command()
 @click.argument('source_sound_file', type=click.Path(exists=True))
-@click.option('--overlap_factor', type=int, default=4)
 @click.option('--norma_window_len', type=int, default=301)
-def main(source_sound_file, overlap_factor, norma_window_len):
-    sf = SoundFile(source_sound_file)
-    bitrate = sf.sample_rate
+def main(source_sound_file, norma_window_len):
+    sound_file = SoundFile(source_sound_file)
+    bitrate = sound_file.sample_rate
 
     file_dir, file_name = os.path.split(source_sound_file)
     sound_name, ext = os.path.splitext(file_name)
@@ -76,51 +63,42 @@ def main(source_sound_file, overlap_factor, norma_window_len):
     # Make nsamples as power of two. More than one second
     nsamples = 2**(1 + int(np.log2(bitrate - 1)))
 
-    decimate = nsamples / 128
+    decimation_factor = 7
+    decimate = nsamples / 2**decimation_factor
 
     echo('Bitrate: {}'.format(bitrate))
-    echo('Sound samples: {}'.format(sf.frames))
+    echo('Sound samples: {}'.format(sound_file.frames))
     echo('Fragment samples: {}'.format(nsamples))
-    echo('Overlap factor: {}'.format(overlap_factor))
 
     norma_window_len += 1 - (norma_window_len % 2)
     echo(u'Norma window len {}'.format(norma_window_len))
 
+    sound_pieces = gen_sound_pieces(sound_file, nsamples / 2)
+    zero_pad = np.zeros(nsamples / 2)
+    overlapped_pieces = iconcatenate_pairs(
+        chain([zero_pad], sound_pieces, [zero_pad])
+    )
+    hanning = np.hanning(nsamples)
+    windowed_pieces = imap(lambda p: p * hanning, overlapped_pieces)
+    pieces_count = (sound_file.frames - 1) / (nsamples / 2) + 1
+
     wbox = WaveletBox(nsamples, time_step=1, scale_resolution=1/24., omega0=40)
 
-    overlap = nsamples / overlap_factor
-
-    decimated_half_overlap = overlap / decimate / 2
-
-    ipieces = gen_pieces(sf, nsamples, overlap)
-
-    pieces_count = ((sf.frames - 1) /
-                    (nsamples - overlap)) + 1
-
-    image_files = []
-
-    slides = []
-
     with click.progressbar(
-        ipieces,
-        length=pieces_count,
-        width=0,
-        show_percent=False,
-        label=u'Pieces count: {}'.format(pieces_count),
+        windowed_pieces, length=pieces_count,
+        width=0, show_percent=False,
         fill_char=click.style('#', fg='magenta')
     ) as bar:
-        for j, sample in enumerate(bar, 1):
-            complex_image = wbox.cwt(sample, decimate=decimate)
+        images = [
+            np.abs(wbox.cwt(windowed_piece, decimate=decimate))
+            for windowed_piece in bar
+        ]
 
-            stripped_complex_image = complex_image[
-                :, decimated_half_overlap: -decimated_half_overlap
-            ]
+    halfs = chain.from_iterable(imap(split_vertical, images))
+    next(halfs)
+    flattened_images = map(lambda (r, u): r + u, grouper(halfs, 2))
 
-            abs_image = np.abs(stripped_complex_image)
-
-            slides.append(abs_image)
-
-    whole_image = np.concatenate(slides, axis=1)
+    whole_image = np.concatenate(flattened_images, axis=1)
     nolmalize_horizontal_smooth(whole_image, norma_window_len)
     mapped_image = apply_colormap(whole_image)
     img = toimage(mapped_image)
@@ -187,6 +165,42 @@ def test_smooth():
     assert smooth(np.linspace(-4, 4, 101), 13).shape[0] == 101
     assert smooth(np.linspace(-4, 4, 1000), 131).shape[0] == 1000
     assert smooth(np.linspace(-4, 4, 1001), 131).shape[0] == 1001
+
+
+def grouper(iterable, n):
+    return izip(*([iter(iterable)] * n))
+
+
+def pairwise(iterable):
+    one, two = tee(iterable)
+    next(two, None)
+    return izip(one, two)
+
+
+def test_iconcatenate_pairs():
+    pairs = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    assert [list(r) for r in iconcatenate_pairs(pairs)] == \
+        [
+            [1, 2, 3, 4, 5, 6],
+            [4, 5, 6, 7, 8, 9],
+        ]
+
+
+def test_split_vertical():
+    i, j = split_vertical([[1, 2], [3, 4]])
+    assert i.tolist() == [[1], [3]]
+    assert j.tolist() == [[2], [4]]
+
+
+def split_vertical(mat):
+    mat = np.asarray(mat)
+    half = mat.shape[1] / 2
+    return mat[:, :half], mat[:, half:]
+
+
+def iconcatenate_pairs(items):
+    for pair in pairwise(items):
+        yield np.concatenate(pair)
 
 
 if __name__ == '__main__':
