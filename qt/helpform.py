@@ -28,36 +28,36 @@ class HelpForm(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_GroupLeader)
 
-        backAction = QAction(QIcon(":/back.png"), "&Back", self)
-        backAction.setShortcut(QKeySequence.Back)
-        homeAction = QAction(QIcon(":/home.png"), "&Home", self)
-        homeAction.setShortcut("Home")
-        self.pageLabel = QLabel()
+        back_action = QAction(QIcon(":/back.png"), "&Back", self)
+        back_action.setShortcut(QKeySequence.Back)
+        home_action = QAction(QIcon(":/home.png"), "&Home", self)
+        home_action.setShortcut("Home")
+        self.page_label = QLabel()
 
-        toolBar = QToolBar()
-        toolBar.addAction(backAction)
-        toolBar.addAction(homeAction)
-        toolBar.addWidget(self.pageLabel)
-        self.textBrowser = QTextBrowser()
+        tool_bar = QToolBar()
+        tool_bar.addAction(back_action)
+        tool_bar.addAction(home_action)
+        tool_bar.addWidget(self.page_label)
+        self.text_browser = QTextBrowser()
 
         layout = QVBoxLayout()
-        layout.addWidget(toolBar)
-        layout.addWidget(self.textBrowser, 1)
+        layout.addWidget(tool_bar)
+        layout.addWidget(self.text_browser, 1)
         self.setLayout(layout)
 
-        # self.connect(backAction, SIGNAL("triggered()"), self.textBrowser, SLOT("backward()"))
-        # self.connect(homeAction, SIGNAL("triggered()"), self.textBrowser, SLOT("home()"))
-        # self.connect(self.textBrowser, SIGNAL("sourceChanged(QUrl)"), self.updatePageTitle)
+        # self.connect(back_action, SIGNAL("triggered()"), self.text_browser, SLOT("backward()"))
+        # self.connect(home_action, SIGNAL("triggered()"), self.text_browser, SLOT("home()"))
+        # self.connect(self.text_browser, SIGNAL("sourceChanged(QUrl)"), self.update_page_title)
 
-        self.textBrowser.setSearchPaths([":/help"])
-        self.textBrowser.setSource(QUrl(page))
+        self.text_browser.setSearchPaths([":/help"])
+        self.text_browser.setSource(QUrl(page))
         self.resize(400, 600)
         self.setWindowTitle("{0} Help".format(
                 QApplication.applicationName()))
 
 
-    def updatePageTitle(self):
-        self.pageLabel.setText(self.textBrowser.documentTitle())
+    def update_page_title(self):
+        self.page_label.setText(self.text_browser.documentTitle())
 
 
 if __name__ == "__main__":

@@ -19,39 +19,39 @@ class ResizeDlg(QDialog):
     def __init__(self, width, height, parent=None):
         super(ResizeDlg, self).__init__(parent)
 
-        widthLabel = QLabel("&Width:")
-        self.widthSpinBox = QSpinBox()
-        widthLabel.setBuddy(self.widthSpinBox)
-        self.widthSpinBox.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
-        self.widthSpinBox.setRange(4, width * 4)
-        self.widthSpinBox.setValue(width)
-        heightLabel = QLabel("&Height:")
-        self.heightSpinBox = QSpinBox()
-        heightLabel.setBuddy(self.heightSpinBox)
-        self.heightSpinBox.setAlignment(Qt.AlignRight|
+        width_label = QLabel("&Width:")
+        self.width_spin_box = QSpinBox()
+        width_label.setBuddy(self.width_spin_box)
+        self.width_spin_box.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
+        self.width_spin_box.setRange(4, width * 4)
+        self.width_spin_box.setValue(width)
+        height_label = QLabel("&Height:")
+        self.height_spin_box = QSpinBox()
+        height_label.setBuddy(self.height_spin_box)
+        self.height_spin_box.setAlignment(Qt.AlignRight|
                                         Qt.AlignVCenter)
-        self.heightSpinBox.setRange(4, height * 4)
-        self.heightSpinBox.setValue(height)
+        self.height_spin_box.setRange(4, height * 4)
+        self.height_spin_box.setValue(height)
 
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok|
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok|
                                      QDialogButtonBox.Cancel)
 
         layout = QGridLayout()
-        layout.addWidget(widthLabel, 0, 0)
-        layout.addWidget(self.widthSpinBox, 0, 1)
-        layout.addWidget(heightLabel, 1, 0)
-        layout.addWidget(self.heightSpinBox, 1, 1)
-        layout.addWidget(buttonBox, 2, 0, 1, 2)
+        layout.addWidget(width_label, 0, 0)
+        layout.addWidget(self.width_spin_box, 0, 1)
+        layout.addWidget(height_label, 1, 0)
+        layout.addWidget(self.height_spin_box, 1, 1)
+        layout.addWidget(button_box, 2, 0, 1, 2)
         self.setLayout(layout)
 
-        self.connect(buttonBox, SIGNAL("accepted()"), self.accept)
-        self.connect(buttonBox, SIGNAL("rejected()"), self.reject)
+        self.connect(button_box, SIGNAL("accepted()"), self.accept)
+        self.connect(button_box, SIGNAL("rejected()"), self.reject)
 
         self.setWindowTitle("Image Changer - Resize")
 
 
     def result(self):
-        return self.widthSpinBox.value(), self.heightSpinBox.value()
+        return self.width_spin_box.value(), self.height_spin_box.value()
 
 
 if __name__ == "__main__":

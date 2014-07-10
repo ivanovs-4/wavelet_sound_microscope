@@ -40,32 +40,32 @@ class NewImageDlg(QDialog, ui_newimagedlg.Ui_NewImageDlg):
             self.brushComboBox.addItem(text, QVariant(value))
 
         self.connect(self.colorButton, SIGNAL("clicked()"),
-                     self.getColor)
+                     self.get_color)
         self.connect(self.brushComboBox, SIGNAL("activated(int)"),
-                     self.setColor)
-        self.setColor()
+                     self.set_color)
+        self.set_color()
         self.widthSpinBox.setFocus()
 
 
-    def getColor(self):
-        color = QColorDialog.getColor(Qt.black, self)
+    def get_color(self):
+        color = QColorDialog.get_color(Qt.black, self)
         if color.isValid():
             self.color = color
-            self.setColor()
+            self.set_color()
 
 
-    def setColor(self):
-        pixmap = self._makePixmap(60, 30)
+    def set_color(self):
+        pixmap = self._make_pixmap(60, 30)
         self.colorLabel.setPixmap(pixmap)
 
 
     def image(self):
-        pixmap = self._makePixmap(self.widthSpinBox.value(),
+        pixmap = self._make_pixmap(self.widthSpinBox.value(),
                                   self.heightSpinBox.value())
         return QPixmap.toImage(pixmap)
 
 
-    def _makePixmap(self, width, height):
+    def _make_pixmap(self, width, height):
         pixmap = QPixmap(width, height)
         style = self.brushComboBox.itemData(
                 self.brushComboBox.currentIndex()).toInt()[0]
