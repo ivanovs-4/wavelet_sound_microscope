@@ -11,7 +11,7 @@
 
 from PyQt5.QtCore import (Qt, SIGNAL)
 from PyQt5.QtGui import (QApplication, QDialog, QDialogButtonBox,
-        QGridLayout, QLabel, QSpinBox)
+                         QGridLayout, QLabel, QSpinBox)
 
 
 class ResizeDlg(QDialog):
@@ -22,19 +22,19 @@ class ResizeDlg(QDialog):
         width_label = QLabel("&Width:")
         self.width_spin_box = QSpinBox()
         width_label.setBuddy(self.width_spin_box)
-        self.width_spin_box.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
+        self.width_spin_box.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.width_spin_box.setRange(4, width * 4)
         self.width_spin_box.setValue(width)
         height_label = QLabel("&Height:")
         self.height_spin_box = QSpinBox()
         height_label.setBuddy(self.height_spin_box)
-        self.height_spin_box.setAlignment(Qt.AlignRight|
-                                        Qt.AlignVCenter)
+        self.height_spin_box.setAlignment(Qt.AlignRight |
+                                          Qt.AlignVCenter)
         self.height_spin_box.setRange(4, height * 4)
         self.height_spin_box.setValue(height)
 
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok|
-                                     QDialogButtonBox.Cancel)
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok |
+                                      QDialogButtonBox.Cancel)
 
         layout = QGridLayout()
         layout.addWidget(width_label, 0, 0)
@@ -49,7 +49,6 @@ class ResizeDlg(QDialog):
 
         self.setWindowTitle("Image Changer - Resize")
 
-
     def result(self):
         return self.width_spin_box.value(), self.height_spin_box.value()
 
@@ -61,4 +60,3 @@ if __name__ == "__main__":
     form = ResizeDlg(64, 128)
     form.show()
     app.exec_()
-

@@ -11,7 +11,7 @@
 
 from PyQt5.QtCore import (QVariant, Qt, SIGNAL)
 from PyQt5.QtGui import (QApplication, QBrush, QColorDialog, QDialog,
-        QPainter, QPixmap)
+                         QPainter, QPixmap)
 import ui_newimagedlg
 
 
@@ -46,29 +46,25 @@ class NewImageDlg(QDialog, ui_newimagedlg.Ui_NewImageDlg):
         self.set_color()
         self.widthSpinBox.setFocus()
 
-
     def get_color(self):
         color = QColorDialog.get_color(Qt.black, self)
         if color.isValid():
             self.color = color
             self.set_color()
 
-
     def set_color(self):
         pixmap = self._make_pixmap(60, 30)
         self.colorLabel.setPixmap(pixmap)
 
-
     def image(self):
         pixmap = self._make_pixmap(self.widthSpinBox.value(),
-                                  self.heightSpinBox.value())
+                                   self.heightSpinBox.value())
         return QPixmap.toImage(pixmap)
-
 
     def _make_pixmap(self, width, height):
         pixmap = QPixmap(width, height)
         style = self.brushComboBox.itemData(
-                self.brushComboBox.currentIndex()).toInt()[0]
+            self.brushComboBox.currentIndex()).toInt()[0]
         brush = QBrush(self.color, Qt.BrushStyle(style))
         painter = QPainter(pixmap)
         painter.fillRect(pixmap.rect(), Qt.white)
@@ -83,4 +79,3 @@ if __name__ == "__main__":
     form = NewImageDlg()
     form.show()
     app.exec_()
-

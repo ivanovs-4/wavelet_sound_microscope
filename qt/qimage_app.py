@@ -1,9 +1,29 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from PyQt5.QtCore import (qAbs, QLineF, QPointF, QRectF, qrand, qsrand, Qt, QTime, QTimer)
-from PyQt5.QtGui import (QBrush, QColor, QPainter, QPainterPath, QPixmap, QPolygonF)
-from PyQt5.QtWidgets import (QApplication, QGraphicsItem, QGraphicsScene, QGraphicsView, QGraphicsWidget)
+from PyQt5.QtCore import (
+    qAbs,
+    QLineF,
+    QPointF,
+    QRectF,
+    qrand,
+    qsrand,
+    Qt,
+    QTime,
+    QTimer)
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QPainter,
+    QPainterPath,
+    QPixmap,
+    QPolygonF)
+from PyQt5.QtWidgets import (
+    QApplication,
+    QGraphicsItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QGraphicsWidget)
 
 
 if __name__ == '__main__':
@@ -11,7 +31,7 @@ if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
-    qsrand(QTime(0,0,0).secsTo(QTime.currentTime()))
+    qsrand(QTime(0, 0, 0).secsTo(QTime.currentTime()))
 
     scene = QGraphicsScene()
     # scene.setItemIndexMethod(QGraphicsScene.NoIndex)

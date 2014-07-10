@@ -11,13 +11,13 @@
 
 from PyQt5.QtCore import (QUrl, Qt, pyqtSignal, pyqtSlot)
 from PyQt5.QtWidgets import (
-    QApplication, QLabel, QAction, QActionGroup, QDockWidget, 
-    QListWidget, QFileDialog, QFrame, QInputDialog, 
+    QApplication, QLabel, QAction, QActionGroup, QDockWidget,
+    QListWidget, QFileDialog, QFrame, QInputDialog,
     QMainWindow, QMessageBox, QSpinBox, QDialog,
- QTextBrowser, QToolBar, QVBoxLayout,
+    QTextBrowser, QToolBar, QVBoxLayout,
 )
 
-from PyQt5.QtGui import ( QIcon, QKeySequence)
+from PyQt5.QtGui import (QIcon, QKeySequence)
 # import qrc_resources
 
 
@@ -53,8 +53,7 @@ class HelpForm(QDialog):
         self.text_browser.setSource(QUrl(page))
         self.resize(400, 600)
         self.setWindowTitle("{0} Help".format(
-                QApplication.applicationName()))
-
+            QApplication.applicationName()))
 
     def update_page_title(self):
         self.page_label.setText(self.text_browser.documentTitle())
@@ -67,4 +66,3 @@ if __name__ == "__main__":
     form = HelpForm("index.html")
     form.show()
     app.exec_()
-
