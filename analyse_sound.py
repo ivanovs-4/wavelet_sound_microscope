@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-from itertools import chain, count, imap, islice, izip, tee, takewhile
+from functools import partial
+from itertools import chain, count, imap, islice, repeat, izip, takewhile, tee
 
 import click
 from click import echo
@@ -13,16 +14,23 @@ from scipy.misc import toimage
 from wavelet_analyse.cuda_backend import WaveletBox
 
 
-def one_channel(wav):
-    return wav[:, 0]
+PROGRESSBAR_DEFAULTS = dict(
+    width=0,
+    show_percent=False,
+    fill_char=click.style('#', fg='magenta')
+)
 
 
-def gen_sound_pieces(sound_file, size):
-    pieces = takewhile(len, imap(lambda i: sound_file.read(size), count()))
-    return imap(
-        lambda sound: np.pad(sound, (0, size - len(sound)), 'constant'),
-        imap(one_channel, pieces)
-    )
+def np_pad_right(data, size, fillvalue):
+    return np.pad(data, (fillvalue, size - len(data)), 'constant')
+
+
+def one_channel(wav, channel_num=0):
+    return wav[:, channel_num]
+
+
+def chunk_sound_file(sound_file, size):
+    return takewhile(len, imap(sound_file.read, repeat(size)))
 
 
 def normalize_image(m):
@@ -71,40 +79,57 @@ def main(source_sound_file, norma_window_len):
     echo('Fragment samples: {}'.format(nsamples))
 
     norma_window_len += 1 - (norma_window_len % 2)
-    echo(u'Norma window len {}'.format(norma_window_len))
+    echo(u'Norma window len: {}'.format(norma_window_len))
 
-    sound_pieces = gen_sound_pieces(sound_file, nsamples / 2)
-    zero_pad = np.zeros(nsamples / 2)
-    overlapped_pieces = iconcatenate_pairs(
-        chain([zero_pad], sound_pieces, [zero_pad])
-    )
-    hanning = np.hanning(nsamples)
-    windowed_pieces = imap(lambda p: p * hanning, overlapped_pieces)
-    pieces_count = (sound_file.frames - 1) / (nsamples / 2) + 1
+    chunks_count = (sound_file.frames - 1) / (nsamples / 2) + 1
+    echo(u'Chunks count: {}'.format(chunks_count))
+
+    wav_chunks = imap(one_channel,
+                      chunk_sound_file(sound_file, nsamples / 2))
 
     wbox = WaveletBox(nsamples, time_step=1, scale_resolution=1/24., omega0=40)
 
-    with click.progressbar(
-        windowed_pieces, length=pieces_count,
-        width=0, show_percent=False,
-        fill_char=click.style('#', fg='magenta')
-    ) as bar:
-        images = [
-            np.abs(wbox.cwt(windowed_piece, decimate=decimate))
-            for windowed_piece in bar
-        ]
+    with click.progressbar(wav_chunks,
+                           length=chunks_count,
+                           **PROGRESSBAR_DEFAULTS)  as bar:
+        whole_image = apply_wbox_cwt(wbox, bar, decimate=decimate)
 
-    halfs = chain.from_iterable(imap(split_vertical, images))
-    next(halfs)
-    flattened_images = map(lambda (r, u): r + u, grouper(halfs, 2))
+    abs_image = np.abs(whole_image)
 
-    whole_image = np.concatenate(flattened_images, axis=1)
-    nolmalize_horizontal_smooth(whole_image, norma_window_len)
-    mapped_image = apply_colormap(whole_image)
+    nolmalize_horizontal_smooth(abs_image, norma_window_len)
+    mapped_image = apply_colormap(abs_image)
     img = toimage(mapped_image)
     whole_image_file_name = '{}.jpg'.format(sound_name)
     whole_image_file = os.path.join('.', whole_image_file_name)
     img.save(whole_image_file)
+
+
+def apply_wbox_cwt(wbox, chunks, **kwargs):
+    half_nsamples = wbox.nsamples / 2
+
+    equal_sized_pieces = imap(
+        partial(np_pad_right, size=half_nsamples, fillvalue=0),
+        chunks
+    )
+
+    zero_pad = np.zeros(half_nsamples)
+    overlapped_pieces = iconcatenate_pairs(
+        chain([zero_pad], equal_sized_pieces, [zero_pad])
+    )
+
+    hanning = np.hanning(wbox.nsamples)
+    windowed_pieces = imap(lambda p: p * hanning, overlapped_pieces)
+
+    complex_images = [
+        wbox.cwt(windowed_piece, **kwargs)
+        for windowed_piece in windowed_pieces
+    ]
+
+    halfs = chain.from_iterable(imap(split_vertical, complex_images))
+    next(halfs)
+    flattened_images = map(lambda (r, u): r + u, grouper(halfs, 2))
+
+    return np.concatenate(flattened_images, axis=1)
 
 
 def nolmalize_horizontal_smooth(arr, window_len):
