@@ -19,40 +19,6 @@ PROGRESSBAR_DEFAULTS = dict(
 )
 
 
-def one_channel(wav, channel_num=0):
-    return wav[:, channel_num]
-
-
-def chunk_sound_file(sound_file, size):
-    return takewhile(len, imap(sound_file.read, repeat(size)))
-
-
-def normalize_image(m):
-    norma = np.max(np.abs(m))
-
-    if norma == 0 or norma == float('inf'):
-        return m
-
-    return m / norma
-
-
-cmap = LinearSegmentedColormap.from_list(
-    'lightfire',
-    sorted([
-        (1, (1, 1, 1)),
-        (0.6, (1, .8, .3)),
-        (0.4, (.8, .7, .1)),
-        (0.2, (.0, .4, .7)),
-        (0.05, (.0, .0, .6)),
-        (0, (0, 0, 0)),
-    ])
-)
-
-
-def apply_colormap(image):
-    return 255 * cmap(image)[:, :, :3]
-
-
 @click.command()
 @click.argument('source_sound_file', type=click.Path(exists=True))
 @click.option('--norma_window_len', type=int, default=301)
@@ -98,6 +64,31 @@ def main(source_sound_file, norma_window_len):
     whole_image_file_name = '{}.jpg'.format(sound_name)
     whole_image_file = os.path.join('.', whole_image_file_name)
     img.save(whole_image_file)
+
+
+def one_channel(wav, channel_num=0):
+    return wav[:, channel_num]
+
+
+def chunk_sound_file(sound_file, size):
+    return takewhile(len, imap(sound_file.read, repeat(size)))
+
+
+def apply_colormap(image):
+    return 255 * cmap(image)[:, :, :3]
+
+
+cmap = LinearSegmentedColormap.from_list(
+    'lightfire',
+    sorted([
+        (1, (1, 1, 1)),
+        (0.6, (1, .8, .3)),
+        (0.4, (.8, .7, .1)),
+        (0.2, (.0, .4, .7)),
+        (0.05, (.0, .0, .6)),
+        (0, (0, 0, 0)),
+    ])
+)
 
 
 def nolmalize_horizontal_smooth(arr, window_len):
