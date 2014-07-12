@@ -54,7 +54,7 @@ def main(source_sound_file, norma_window_len):
     with click.progressbar(wav_chunks,
                            length=chunks_count,
                            **PROGRESSBAR_DEFAULTS) as chunks:
-        whole_image = wbox.apply_wbox_cwt(chunks, decimate=decimate)
+        whole_image = wbox.apply_cwt(chunks, decimate=decimate)
 
     abs_image = np.abs(whole_image)
 

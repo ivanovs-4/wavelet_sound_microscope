@@ -54,7 +54,7 @@ class BaseWaveletBox(object):
         if not is_power_of_two(nsamples):
             raise Exception(u'nsamples must be power of two')
 
-    def apply_wbox_cwt(self, chunks, **kwargs):
+    def apply_cwt(self, chunks, **kwargs):
         half_nsamples = self.nsamples / 2
 
         equal_sized_pieces = imap(
