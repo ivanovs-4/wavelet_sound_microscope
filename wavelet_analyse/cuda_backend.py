@@ -6,6 +6,8 @@ import pycuda.gpuarray as gpuarray
 from pycuda.elementwise import ElementwiseKernel
 from pyfft.cuda import Plan
 
+from wavelet_analyse.base import BaseWaveletBox
+
 
 BACKEND = 'cuda'
 
@@ -34,23 +36,22 @@ calculate_morlet = ElementwiseKernel(
 
 
 multiply_them = ElementwiseKernel(
-    "pycuda::complex<float> *dest, "
-    "pycuda::complex<float> *left, "
-    "pycuda::complex<float> *right",
-    "dest[i] = left[i] * right[i]",
-    "multiply_them",
+    """
+    pycuda::complex<float> *dest,
+    pycuda::complex<float> *left,
+    pycuda::complex<float> *right
+    """,
+    'dest[i] = left[i] * right[i]',
+    'multiply_them',
     preamble='''#include <pycuda-complex.hpp>'''
 )
 
 
-def is_power_of_two(val):
-    return val and val & (val - 1)
+class WaveletBox(BaseWaveletBox):
 
-
-class WaveletBox(object):
     def __init__(self, nsamples, time_step, scale_resolution, omega0):
-        if not is_power_of_two(nsamples):
-            raise Exception(u'nsamples must be power of two')
+        super(WaveletBox, self). \
+            __init__(nsamples, time_step, scale_resolution, omega0)
 
         self.nsamples = nsamples
         self.scales = self.autoscales(nsamples, time_step,
@@ -63,7 +64,6 @@ class WaveletBox(object):
         stream = cuda.Stream()
 
         self.plan = Plan((nsamples,), stream=stream)
-
 
     def cwt(self, data, decimate=None):
         x_arr = np.asarray(data, dtype=np.complex64) - np.mean(data)
@@ -106,17 +106,16 @@ class WaveletBox(object):
 
         return complex_image
 
-
     def autoscales(self, nsamples, time_step, scale_resolution, omega0):
         """ Compute scales as fractional power of two """
 
-        s0 = (time_step * (omega0 + np.sqrt(2 + omega0**2))) / PI2
+        s0 = (time_step * (omega0 + np.sqrt(2 + omega0 ** 2))) / PI2
 
-        J = int(np.floor(scale_resolution**-1 *
+        J = int(np.floor(scale_resolution ** -1 *
                          np.log2((nsamples * time_step) / s0)))
 
         return np.fromiter(
-            (s0 * 2**(i * scale_resolution) for i in range(J + 1)),
+            (s0 * 2 ** (i * scale_resolution) for i in range(J + 1)),
             np.float32, J + 1
         )
 
@@ -128,7 +127,7 @@ def normalization(scale, time_step):
 def morlet_ft_box(scales, angular_frequencies, omega0, time_step):
     """ Fourier tranformed morlet function """
 
-    pi_sqr_1_4 = 0.75112554446494251 # pi**(-1.0/4.0)
+    pi_sqr_1_4 = 0.75112554446494251  # pi**(-1.0/4.0)
 
     wavelet = range(scales.shape[0])
 

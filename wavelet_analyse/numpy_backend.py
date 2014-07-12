@@ -8,13 +8,13 @@ PI2 = 2 * np.pi
 
 
 class WaveletBox(object):
-    def __init__(self, N, dt=1, dj=1/9., p=np.pi):
+
+    def __init__(self, N, dt=1, dj=1 / 9., p=np.pi):
         self.scales = self.autoscales(N, dt, dj, np.pi)
         self.angular_frequencies = angularfreq(N=N, dt=dt)
 
-        self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p, 
+        self.wft = morletft(s=self.scales, w=self.angular_frequencies, w0=p,
                             dt=dt)
-
 
     def cwt(self, data):
         x_arr = np.asarray(data) - np.mean(data)
@@ -24,8 +24,8 @@ class WaveletBox(object):
 
         assert x_arr.shape[0] == self.wft.shape[1]
 
-        complex_image = np.empty((self.wft.shape[0], self.wft.shape[1]), 
-                              dtype=np.complex128)
+        complex_image = np.empty((self.wft.shape[0], self.wft.shape[1]),
+                                 dtype=np.complex128)
 
         x_arr_ft = np.fft.fft(x_arr)
 
@@ -34,7 +34,6 @@ class WaveletBox(object):
 
         return complex_image
 
-
     def autoscales(self, N, dt, dj, p):
         """
         Compute scales as fractional power of two.
@@ -42,18 +41,18 @@ class WaveletBox(object):
         :Parameters:
             N : integer : umber of data samples
             dt : float : time step
-            dj : float : scale resolution 
+            dj : float : scale resolution
             p : float : omega0 ('morlet')
 
         :Returns:
             scales : 1d numpy array
         """
 
-        s0 = (dt * (p + np.sqrt(2 + p**2))) / PI2
+        s0 = (dt * (p + np.sqrt(2 + p ** 2))) / PI2
 
-        J = int(np.floor(dj**-1 * np.log2((N * dt) / s0)))
+        J = int(np.floor(dj ** -1 * np.log2((N * dt) / s0)))
 
-        return np.fromiter((s0 * 2**(i * dj) for i in range(J + 1)),
+        return np.fromiter((s0 * 2 ** (i * dj) for i in range(J + 1)),
                            np.float, J + 1)
 
 
@@ -73,13 +72,13 @@ def morletft(s, w, w0, dt):
       * (normalized) fourier transformed morlet function
     """
 
-    p = 0.75112554446494251 # pi**(-1.0/4.0)
+    p = 0.75112554446494251  # pi**(-1.0/4.0)
     wavelet = np.zeros((s.shape[0], w.shape[0]))
     pos = w > 0
 
     for i in range(s.shape[0]):
         n = normalization(s[i], dt)
-        wavelet[i][pos] = n * p * np.exp(-(s[i] * w[pos] - w0)**2 / 2.0)
+        wavelet[i][pos] = n * p * np.exp(-(s[i] * w[pos] - w0) ** 2 / 2.0)
 
     return wavelet
 

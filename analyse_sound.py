@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
-from functools import partial
-from itertools import chain, count, imap, islice, repeat, izip, takewhile, tee
+from itertools import imap, repeat, takewhile
 
 import click
-from click import echo
 import numpy as np
+from click import echo
 from matplotlib.colors import LinearSegmentedColormap
 from pysoundfile import SoundFile
 from scipy.misc import toimage
@@ -19,10 +17,6 @@ PROGRESSBAR_DEFAULTS = dict(
     show_percent=False,
     fill_char=click.style('#', fg='magenta')
 )
-
-
-def np_pad_right(data, size, fillvalue):
-    return np.pad(data, (fillvalue, size - len(data)), 'constant')
 
 
 def one_channel(wav, channel_num=0):
@@ -54,6 +48,7 @@ cmap = LinearSegmentedColormap.from_list(
     ])
 )
 
+
 def apply_colormap(image):
     return 255 * cmap(image)[:, :, :3]
 
@@ -69,10 +64,10 @@ def main(source_sound_file, norma_window_len):
     sound_name, ext = os.path.splitext(file_name)
 
     # Make nsamples as power of two. More than one second
-    nsamples = 2**(1 + int(np.log2(bitrate - 1)))
+    nsamples = 2 ** (1 + int(np.log2(bitrate - 1)))
 
     decimation_factor = 7
-    decimate = nsamples / 2**decimation_factor
+    decimate = nsamples / 2 ** decimation_factor
 
     echo('Bitrate: {}'.format(bitrate))
     echo('Sound samples: {}'.format(sound_file.frames))
@@ -87,12 +82,13 @@ def main(source_sound_file, norma_window_len):
     wav_chunks = imap(one_channel,
                       chunk_sound_file(sound_file, nsamples / 2))
 
-    wbox = WaveletBox(nsamples, time_step=1, scale_resolution=1/24., omega0=40)
+    wbox = WaveletBox(nsamples, time_step=1,
+                      scale_resolution=1 / 24., omega0=40)
 
     with click.progressbar(wav_chunks,
                            length=chunks_count,
-                           **PROGRESSBAR_DEFAULTS)  as bar:
-        whole_image = apply_wbox_cwt(wbox, bar, decimate=decimate)
+                           **PROGRESSBAR_DEFAULTS) as chunks:
+        whole_image = wbox.apply_wbox_cwt(chunks, decimate=decimate)
 
     abs_image = np.abs(whole_image)
 
@@ -102,34 +98,6 @@ def main(source_sound_file, norma_window_len):
     whole_image_file_name = '{}.jpg'.format(sound_name)
     whole_image_file = os.path.join('.', whole_image_file_name)
     img.save(whole_image_file)
-
-
-def apply_wbox_cwt(wbox, chunks, **kwargs):
-    half_nsamples = wbox.nsamples / 2
-
-    equal_sized_pieces = imap(
-        partial(np_pad_right, size=half_nsamples, fillvalue=0),
-        chunks
-    )
-
-    zero_pad = np.zeros(half_nsamples)
-    overlapped_pieces = iconcatenate_pairs(
-        chain([zero_pad], equal_sized_pieces, [zero_pad])
-    )
-
-    hanning = np.hanning(wbox.nsamples)
-    windowed_pieces = imap(lambda p: p * hanning, overlapped_pieces)
-
-    complex_images = [
-        wbox.cwt(windowed_piece, **kwargs)
-        for windowed_piece in windowed_pieces
-    ]
-
-    halfs = chain.from_iterable(imap(split_vertical, complex_images))
-    next(halfs)
-    flattened_images = map(lambda (r, u): r + u, grouper(halfs, 2))
-
-    return np.concatenate(flattened_images, axis=1)
 
 
 def nolmalize_horizontal_smooth(arr, window_len):
@@ -154,13 +122,13 @@ def smooth(x, window_len=11, window='hanning'):
     """
 
     if window_len % 2 != 1:
-        raise ValueError, "window_len must be odd"
+        raise ValueError('window_len must be odd')
 
     if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays"
+        raise ValueError('smooth only accepts 1 dimension arrays')
 
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size"
+        raise ValueError('Input vector needs to be bigger than window size')
 
     if window_len < 3:
         return x
@@ -168,7 +136,7 @@ def smooth(x, window_len=11, window='hanning'):
     allowed = ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']
 
     if window not in allowed:
-        raise ValueError, "Window is on of %s" % allowed
+        raise ValueError('Window is on of %s' % allowed)
 
     s = np.r_[x[window_len - 1: 0: -1], x, x[-1: -window_len: -1]]
 
@@ -190,42 +158,6 @@ def test_smooth():
     assert smooth(np.linspace(-4, 4, 101), 13).shape[0] == 101
     assert smooth(np.linspace(-4, 4, 1000), 131).shape[0] == 1000
     assert smooth(np.linspace(-4, 4, 1001), 131).shape[0] == 1001
-
-
-def grouper(iterable, n):
-    return izip(*([iter(iterable)] * n))
-
-
-def pairwise(iterable):
-    one, two = tee(iterable)
-    next(two, None)
-    return izip(one, two)
-
-
-def test_iconcatenate_pairs():
-    pairs = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-    assert [list(r) for r in iconcatenate_pairs(pairs)] == \
-        [
-            [1, 2, 3, 4, 5, 6],
-            [4, 5, 6, 7, 8, 9],
-        ]
-
-
-def test_split_vertical():
-    i, j = split_vertical([[1, 2], [3, 4]])
-    assert i.tolist() == [[1], [3]]
-    assert j.tolist() == [[2], [4]]
-
-
-def split_vertical(mat):
-    mat = np.asarray(mat)
-    half = mat.shape[1] / 2
-    return mat[:, :half], mat[:, half:]
-
-
-def iconcatenate_pairs(items):
-    for pair in pairwise(items):
-        yield np.concatenate(pair)
 
 
 if __name__ == '__main__':
