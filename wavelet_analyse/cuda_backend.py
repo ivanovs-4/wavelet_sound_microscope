@@ -43,8 +43,15 @@ multiply_them = ElementwiseKernel(
 )
 
 
+def is_power_of_two(val):
+    return val and val & (val - 1)
+
+
 class WaveletBox(object):
     def __init__(self, nsamples, time_step, scale_resolution, omega0):
+        if not is_power_of_two(nsamples):
+            raise Exception(u'nsamples must be power of two')
+
         self.nsamples = nsamples
         self.scales = self.autoscales(nsamples, time_step,
                                       scale_resolution, omega0)
