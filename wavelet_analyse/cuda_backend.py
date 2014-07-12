@@ -53,11 +53,6 @@ class WaveletBox(BaseWaveletBox):
         super(WaveletBox, self). \
             __init__(nsamples, time_step, scale_resolution, omega0)
 
-        self.nsamples = nsamples
-        self.scales = self.autoscales(nsamples, time_step,
-                                      scale_resolution, omega0)
-        self.angular_frequencies = angularfreq(nsamples, time_step)
-
         self.wft = morlet_ft_box(self.scales, self.angular_frequencies,
                                  omega0, time_step)
 
@@ -106,19 +101,6 @@ class WaveletBox(BaseWaveletBox):
 
         return complex_image
 
-    def autoscales(self, nsamples, time_step, scale_resolution, omega0):
-        """ Compute scales as fractional power of two """
-
-        s0 = (time_step * (omega0 + np.sqrt(2 + omega0 ** 2))) / PI2
-
-        J = int(np.floor(scale_resolution ** -1 *
-                         np.log2((nsamples * time_step) / s0)))
-
-        return np.fromiter(
-            (s0 * 2 ** (i * scale_resolution) for i in range(J + 1)),
-            np.float32, J + 1
-        )
-
 
 def normalization(scale, time_step):
     return np.sqrt(PI2 * scale / time_step)
@@ -150,20 +132,6 @@ def morlet_ft_box(scales, angular_frequencies, omega0, time_step):
         )
 
     return wavelet
-
-
-def angularfreq(nsamples, time_step):
-    """ Compute angular frequencies """
-
-    N2 = nsamples / 2.0
-
-    return np.fromiter(
-        (
-            PI2 * (i if i <= N2 else i - nsamples) / (nsamples * time_step)
-            for i in range(nsamples)
-        ),
-        np.float32, nsamples
-    )
 
 
 '''
