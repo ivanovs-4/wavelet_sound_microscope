@@ -8,7 +8,8 @@ from click import echo
 from pysoundfile import SoundFile
 from scipy.misc import toimage
 
-from media import apply_colormap, nolmalize_horizontal_smooth
+from media import (apply_colormap, nolmalize_horizontal_smooth,
+                   wav_chunks_from_sound_file)
 from wavelet_analyse.cuda_backend import WaveletBox
 
 
@@ -45,13 +46,10 @@ def main(source_sound_file, norma_window_len):
     chunks_count = (sound_file.frames - 1) / (nsamples / 2) + 1
     echo(u'Chunks count: {}'.format(chunks_count))
 
-    wav_chunks = imap(one_channel,
-                      chunk_sound_file(sound_file, nsamples / 2))
-
     wbox = WaveletBox(nsamples, time_step=1,
                       scale_resolution=1 / 24., omega0=40)
 
-    with click.progressbar(wav_chunks,
+    with click.progressbar(wav_chunks_from_sound_file(sound_file, nsamples / 2),
                            length=chunks_count,
                            **PROGRESSBAR_DEFAULTS) as chunks:
         whole_image = wbox.apply_cwt(chunks, decimate=decimate)
@@ -64,14 +62,6 @@ def main(source_sound_file, norma_window_len):
     whole_image_file_name = '{}.jpg'.format(sound_name)
     whole_image_file = os.path.join('.', whole_image_file_name)
     img.save(whole_image_file)
-
-
-def one_channel(wav, channel_num=0):
-    return wav[:, channel_num]
-
-
-def chunk_sound_file(sound_file, size):
-    return takewhile(len, imap(sound_file.read, repeat(size)))
 
 
 if __name__ == '__main__':

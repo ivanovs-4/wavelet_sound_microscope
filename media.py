@@ -1,5 +1,18 @@
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+from itertools import imap, repeat, takewhile
+
+
+def chunk_sound_file(sound_file, size):
+    return takewhile(len, imap(sound_file.read, repeat(size)))
+
+
+def one_channel(wav, channel_num=0):
+    return wav[:, channel_num]
+
+
+def wav_chunks_from_sound_file(sound_file, size):
+    return imap(one_channel, chunk_sound_file(sound_file, size))
 
 
 cmap = LinearSegmentedColormap.from_list(
