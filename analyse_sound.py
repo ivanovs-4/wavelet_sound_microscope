@@ -57,10 +57,9 @@ def main(source_sound_file, norma_window_len):
     abs_image = np.abs(whole_image)
 
     nolmalize_horizontal_smooth(abs_image, norma_window_len)
-    mapped_image = apply_colormap(abs_image)
-    img = toimage(mapped_image)
     whole_image_file_name = '{}.jpg'.format(sound_name)
     whole_image_file = os.path.join('.', whole_image_file_name)
+    img = toimage(apply_colormap(abs_image))
     img.save(whole_image_file)
 
 
