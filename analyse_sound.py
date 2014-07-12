@@ -14,8 +14,6 @@ from wavelet_analyse.cuda_backend import WaveletBox
 
 
 PROGRESSBAR_DEFAULTS = dict(
-    width=0,
-    show_percent=False,
     fill_char=click.style('#', fg='magenta')
 )
 
@@ -51,7 +49,8 @@ def main(source_sound_file, norma_window_len):
 
     with progressbar(wav_chunks_from_sound_file(sound_file, nsamples / 2),
                      length=chunks_count,
-                     **PROGRESSBAR_DEFAULTS) as chunks:
+                     **PROGRESSBAR_DEFAULTS
+                     ) as chunks:
         whole_image = wbox.apply_cwt(chunks, decimate=decimate)
 
     abs_image = np.abs(whole_image)
