@@ -42,10 +42,6 @@ def iconcatenate_pairs(items):
         yield np.concatenate(pair)
 
 
-def np_pad_right(data, size, fillvalue):
-    return np.pad(data, (fillvalue, size - len(data)), 'constant')
-
-
 def is_power_of_two(val):
     return val and val & (val - 1) == 0
 
@@ -62,11 +58,19 @@ class BaseWaveletBox(object):
 
     def apply_cwt(self, chunks, **kwargs):
         half_nsamples = self.nsamples / 2
+        pad_num = 0
 
-        equal_sized_pieces = imap(
-            partial(np_pad_right, size=half_nsamples, fillvalue=0),
-            chunks
-        )
+        def np_pad_right(data):
+            pad_num = half_nsamples - len(data)
+            if pad_num < 0:
+                raise Exception(u'Chunks size must be equal to nsamples / 2'
+                                u' except last, which may be shorter')
+            if pad_num:
+                return np.pad(data, (0, pad_num), 'constant')
+            else:
+                return data
+
+        equal_sized_pieces = imap(np_pad_right, chunks)
 
         zero_pad = np.zeros(half_nsamples)
         overlapped_pieces = iconcatenate_pairs(
@@ -84,6 +88,9 @@ class BaseWaveletBox(object):
         halfs = chain.from_iterable(imap(split_vertical, complex_images))
         next(halfs)
         flattened_images = map(lambda r_u: r_u[0] + r_u[1], grouper(halfs, 2))
+
+        # Cut pad_num from last
+        flattened_images[-1] = flattened_images[-1][:, :-pad_num]
 
         return np.concatenate(flattened_images, axis=1)
 
