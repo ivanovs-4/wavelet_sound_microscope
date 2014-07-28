@@ -15,7 +15,7 @@ def wav_chunks_from_sound_file(sound_file, size):
     return imap(one_channel, chunk_sound_file(sound_file, size))
 
 
-cmap = LinearSegmentedColormap.from_list(
+lightfire_colormap = LinearSegmentedColormap.from_list(
     'lightfire',
     sorted([
         (1, (1, 1, 1)),
@@ -28,7 +28,21 @@ cmap = LinearSegmentedColormap.from_list(
 )
 
 
-def apply_colormap(image):
+trinagle_colormap = LinearSegmentedColormap.from_list(
+    'triangle',
+    sorted([
+        (3./3, (1, 0, 0)),
+        (2./3, (0, 1, 0)),
+        (1./3, (0, 0, 1)),
+        (0./3, (1, 0, 0)),
+    ])
+)
+
+
+def apply_colormap(image, cmap=None):
+    if not cmap:
+        cmap = lightfire_colormap
+
     return 255 * cmap(image)[:, :, :3]
 
 

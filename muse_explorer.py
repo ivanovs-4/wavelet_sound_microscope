@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import os
 import sys
+from functools import partial
 
 from PyQt5.QtCore import Qt, QSettings, QTimer, QVariant, QFile
 from PyQt5.QtGui import QPainter, QPixmap, QImage, QKeySequence, QImageReader
@@ -9,6 +10,7 @@ from PyQt5.QtWidgets import (QApplication, QGraphicsScene, QGraphicsView,
 
 from gui.helperqmainwindow import HelperQMainWindow
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
+from composition import Composition
 
 
 __version__ = '1.0.0'
@@ -19,7 +21,13 @@ class MainWindow(HelperQMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        self.filename = None
+        self.composition = None
+
+        self.composition_prepare = partial(
+            Composition,
+            statusbar = StatusbarInterface(self.statusBar())
+            progressbar = ProgressBarInterface(self.progressbar)
+        )
 
         self.spectrogram = SpectrogramQGraphicsView()
         self.spectrogram.setMinimumSize(200, 200)
@@ -58,11 +66,10 @@ class MainWindow(HelperQMainWindow):
     def file_open(self):
         if not self.ok_to_continue():
             return
-        path = (os.path.dirname(self.filename)
-               if self.filename is not None else '.')
-        formats = (["*.{0}".format(format.data().decode("ascii").lower())
-                for format in QImageReader.supportedImageFormats()])
-        # formats = ['*.wav', '*.flac']
+
+        path = (os.path.dirname(self.composition.filename)
+               if self.composition is not None else '.')
+        formats = ['*.wav', '*.flac']
 
         fname, fmts = QFileDialog.getOpenFileName(
             self,
@@ -75,24 +82,21 @@ class MainWindow(HelperQMainWindow):
             self.load_file(fname)
 
     def load_file(self, fname):
-        self.filename = None
-        image = QImage(fname)
-        self.update_status(fname)
-        if image.isNull():
-            message = 'Failed to read {0}'.format(fname)
+        try:
+            self.composition = self.composition_prepare(fname)
+        except Exception as e:
+            message = repr(e)
         else:
-            self.image = image
-            self.filename = fname
             self.show_image()
-            self.size_label.setText('{0} x {1}'.
-                                    format(image.width(), image.height()))
             message = 'Loaded {0}'.format(os.path.basename(fname))
+
         self.update_status(message)
 
     def show_image(self):
-        if self.image.isNull():
+        if not self.composition:
             return
-        self.spectrogram.show_image(self.image)
+
+        self.spectrogram.show_image(QImage(self.composition.image))
 
     def load_initial_file(self):
         settings = QSettings()

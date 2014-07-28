@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from functools import partial
 from itertools import imap, repeat, takewhile
 
 import click
@@ -13,7 +14,8 @@ from media import (apply_colormap, nolmalize_horizontal_smooth,
 from wavelet_analyse.cuda_backend import WaveletBox
 
 
-PROGRESSBAR_DEFAULTS = dict(
+progress_bar = partial(
+    progressbar,
     fill_char=click.style('#', fg='magenta')
 )
 
@@ -47,10 +49,9 @@ def main(source_sound_file, norma_window_len):
     wbox = WaveletBox(nsamples, time_step=1,
                       scale_resolution=1 / 24., omega0=40)
 
-    with progressbar(wav_chunks_from_sound_file(sound_file, nsamples / 2),
-                     length=chunks_count,
-                     **PROGRESSBAR_DEFAULTS
-                     ) as chunks:
+    with progress_bar(wav_chunks_from_sound_file(sound_file, nsamples / 2),
+                      length=chunks_count
+                      ) as chunks:
         whole_image = wbox.apply_cwt(chunks, decimate=decimate)
 
     abs_image = np.abs(whole_image)
