@@ -6,15 +6,12 @@ from pysoundfile import SoundFile
 from scipy.misc import toimage
 
 from media import trinagle_colormap, apply_colormap, wav_chunks_from_sound_file
+from utils import cached_property
 from wavelet_analyse.cuda_backend import WaveletBox
 
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-
-def lazy_property(fn):
-    return fn
 
 
 @contextmanager
@@ -63,22 +60,22 @@ class Composition(object):
         self.norma_window_len = 301
         log.debug(u'Norma window len: {}'.format(self.norma_window_len))
 
-    @lazy_property
+    @cached_property
     def wbox(self):
         with self.statusbar('Calculating WaveletBox...'):
             return WaveletBox(nsamples, time_step=1,
                               scale_resolution=1 / 24., omega0=40)
 
-    @lazy_property
+    @cached_property
     def image(self):
         return toimage(apply_colormap(np.abs(self.whole_image)))
 
-    @lazy_property
+    @cached_property
     def phase_image(self):
         return toimage(apply_colormap(np.angle(self.whole_image),
                                       trinagle_colormap))
 
-    @lazy_property
+    @cached_property
     def whole_image(self):
         wav_chunks = wav_chunks_from_sound_file(self.sound_file,
                                                 self.nsamples / 2)
