@@ -5,7 +5,7 @@ import numpy as np
 from pysoundfile import SoundFile
 from scipy.misc import toimage
 
-from media import trinagle_colormap, apply_colormap, wav_chunks_from_sound_file
+from media import apply_colormap, wav_chunks_from_sound_file, nolmalize_horizontal_smooth
 from utils import cached_property
 from wavelet_analyse.cuda_backend import WaveletBox
 
@@ -15,10 +15,10 @@ log.setLevel(logging.DEBUG)
 
 
 @contextmanager
-def statusbar(val):
-    log.debug('info before %s', val)
+def statusbar_(val):
+    log.debug('statusbar before %s', val)
     yield
-    log.debug('info after %s', val)
+    log.debug('statusbar after %s', val)
 
 
 class DummyProgressbar(object):
@@ -32,16 +32,16 @@ class DummyProgressbar(object):
         pass
 
     def __iter__(self):
-        return self
+        return self.iterable
 
     def __next__(self):
         return next(self.iterable)
 
 
 class Composition(object):
-    def __init__(self, filename, statusbar_=None, progressbar_=None):
-        self.statusbar = statusbar_ or statusbar
-        self.progressbar = progressbar_ or DummyProgressbar
+    def __init__(self, filename, statusbar=None, progressbar=None):
+        self.statusbar = statusbar or statusbar_
+        self.progressbar = progressbar or DummyProgressbar
 
         self.filename = filename
         self.sound_file = SoundFile(self.filename)
@@ -51,7 +51,7 @@ class Composition(object):
         )
 
         self.decimation_factor = 7
-        self.decimate = nsamples / 2 ** decimation_factor
+        self.decimate = self.nsamples / 2 ** self.decimation_factor
 
         log.debug('Bitrate: {}'.format(self.sound_file.sample_rate))
         log.debug('Sound samples: {}'.format(self.sound_file.frames))
@@ -62,18 +62,17 @@ class Composition(object):
 
     @cached_property
     def wbox(self):
-        with self.statusbar('Calculating WaveletBox...'):
-            return WaveletBox(nsamples, time_step=1,
+        with self.statusbar('Calculating WaveletBox'):
+            return WaveletBox(self.nsamples, time_step=1,
                               scale_resolution=1 / 24., omega0=40)
 
-    @cached_property
-    def image(self):
-        return toimage(apply_colormap(np.abs(self.whole_image)))
+    def get_image(self, norma_window_len=None):
+        abs_image = np.abs(self.whole_image)
 
-    @cached_property
-    def phase_image(self):
-        return toimage(apply_colormap(np.angle(self.whole_image),
-                                      trinagle_colormap))
+        if norma_window_len:
+            nolmalize_horizontal_smooth(abs_image, norma_window_len)
+
+        return toimage(apply_colormap(abs_image))
 
     @cached_property
     def whole_image(self):
@@ -88,4 +87,4 @@ class Composition(object):
         with self.progressbar(wav_chunks, length=chunks_count,
                               label='Calculating wavelet transformation...'
                               ) as chunks:
-            return self.wbox.apply_cwt(chunks, decimate=decimate)
+            return self.wbox.apply_cwt(chunks, decimate=self.decimate)

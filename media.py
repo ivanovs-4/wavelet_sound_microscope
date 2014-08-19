@@ -1,6 +1,7 @@
+from itertools import imap, repeat, takewhile
+
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from itertools import imap, repeat, takewhile
 
 
 def chunk_sound_file(sound_file, size):
@@ -24,17 +25,6 @@ lightfire_colormap = LinearSegmentedColormap.from_list(
         (0.2, (.0, .4, .7)),
         (0.05, (.0, .0, .6)),
         (0, (0, 0, 0)),
-    ])
-)
-
-
-trinagle_colormap = LinearSegmentedColormap.from_list(
-    'triangle',
-    sorted([
-        (3./3, (1, 0, 0)),
-        (2./3, (0, 1, 0)),
-        (1./3, (0, 0, 1)),
-        (0./3, (1, 0, 0)),
     ])
 )
 
