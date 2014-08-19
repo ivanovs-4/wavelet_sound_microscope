@@ -1,5 +1,5 @@
 from functools import partial
-from itertools import chain, imap, izip, tee
+from itertools import chain, tee
 
 import numpy as np
 
@@ -9,11 +9,11 @@ PI2 = 2 * np.pi
 def pairwise(iterable):
     one, two = tee(iterable)
     next(two, None)
-    return izip(one, two)
+    return zip(one, two)
 
 
 def grouper(iterable, n):
-    return izip(*([iter(iterable)] * n))
+    return zip(*([iter(iterable)] * n))
 
 
 def test_split_vertical():
@@ -70,7 +70,7 @@ class BaseWaveletBox(object):
             else:
                 return data
 
-        equal_sized_pieces = imap(np_pad_right, chunks)
+        equal_sized_pieces = map(np_pad_right, chunks)
 
         zero_pad = np.zeros(half_nsamples)
         overlapped_pieces = iconcatenate_pairs(
@@ -78,16 +78,16 @@ class BaseWaveletBox(object):
         )
 
         hanning = np.hanning(self.nsamples)
-        windowed_pieces = imap(lambda p: p * hanning, overlapped_pieces)
+        windowed_pieces = map(lambda p: p * hanning, overlapped_pieces)
 
         complex_images = [
             self.cwt(windowed_piece, **kwargs)
             for windowed_piece in windowed_pieces
         ]
 
-        halfs = chain.from_iterable(imap(split_vertical, complex_images))
+        halfs = chain.from_iterable(map(split_vertical, complex_images))
         next(halfs)
-        flattened_images = map(lambda r_u: r_u[0] + r_u[1], grouper(halfs, 2))
+        flattened_images = [left + right for left, right in grouper(halfs, 2)]
 
         # Cut pad_num from last
         flattened_images[-1] = flattened_images[-1][:, :-pad_num]

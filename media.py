@@ -1,11 +1,11 @@
-from itertools import imap, repeat, takewhile
+from itertools import repeat, takewhile
 
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 
 
 def chunk_sound_file(sound_file, size):
-    return takewhile(len, imap(sound_file.read, repeat(size)))
+    return takewhile(len, map(sound_file.read, repeat(size)))
 
 
 def one_channel(wav, channel_num=0):
@@ -13,7 +13,7 @@ def one_channel(wav, channel_num=0):
 
 
 def wav_chunks_from_sound_file(sound_file, size):
-    return imap(one_channel, chunk_sound_file(sound_file, size))
+    return map(one_channel, chunk_sound_file(sound_file, size))
 
 
 lightfire_colormap = LinearSegmentedColormap.from_list(
@@ -93,4 +93,4 @@ def smooth(x, window_len=11, window='hanning'):
 
     y = np.convolve(w / w.sum(), s, mode='valid')
 
-    return y[(window_len / 2): -(window_len / 2)]
+    return y[(window_len // 2): -(window_len // 2)]

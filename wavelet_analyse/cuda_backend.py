@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 import pycuda.autoinit
 import pycuda.driver as cuda
 import pycuda.gpuarray as gpuarray
 from pycuda.elementwise import ElementwiseKernel
-from pyfft.cuda import Plan
 
+from pyfft.cuda import Plan
 from wavelet_analyse.base import BaseWaveletBox
 
-
-BACKEND = 'cuda'
 
 PI2 = 2 * np.pi
 
@@ -111,7 +108,7 @@ def morlet_ft_box(scales, angular_frequencies, omega0, time_step):
 
     pi_sqr_1_4 = 0.75112554446494251  # pi**(-1.0/4.0)
 
-    wavelet = range(scales.shape[0])
+    wavelet = [None] * scales.shape[0]
 
     gpu_angular_frequencies = gpuarray.to_gpu(angular_frequencies)
 
@@ -173,7 +170,8 @@ def extract_columns(mat, start, stop):
     copy.set_src_device(mat.gpudata)
     copy.src_x_in_bytes = start * itemsize  # First column offset in bytes
     copy.set_dst_device(new_mat.gpudata)
-    copy.src_pitch = M * itemsize  # Source array row width in bytes
+
+    copy.src_pitch = int(M) * itemsize  # Source array row width in bytes
     copy.dst_pitch = copy.width_in_bytes = m * itemsize  # Width of sliced row
     copy.height = N
     copy(aligned=True)

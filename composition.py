@@ -16,9 +16,9 @@ log.setLevel(logging.DEBUG)
 
 @contextmanager
 def statusbar_(val):
-    log.debug('statusbar before %s', val)
+    # log.debug('Statusbar before %s', val)
     yield
-    log.debug('statusbar after %s', val)
+    # log.debug('Statusbar after %s', val)
 
 
 class DummyProgressbar(object):
@@ -51,7 +51,7 @@ class Composition(object):
         )
 
         self.decimation_factor = 7
-        self.decimate = self.nsamples / 2 ** self.decimation_factor
+        self.decimate = self.nsamples // 2 ** self.decimation_factor
 
         log.debug('Bitrate: {}'.format(self.sound_file.sample_rate))
         log.debug('Sound samples: {}'.format(self.sound_file.frames))
@@ -77,14 +77,14 @@ class Composition(object):
     @cached_property
     def whole_image(self):
         wav_chunks = wav_chunks_from_sound_file(self.sound_file,
-                                                self.nsamples / 2)
+                                                self.nsamples // 2)
 
         chunks_count = \
-            (self.sound_file.frames - 1) / (self.nsamples / 2) + 1
+            (self.sound_file.frames - 1) // (self.nsamples // 2) + 1
 
         log.debug(u'Chunks count: {}'.format(chunks_count))
 
         with self.progressbar(wav_chunks, length=chunks_count,
-                              label='Calculating wavelet transformation...'
+                              label='Calculating wavelet transformation'
                               ) as chunks:
             return self.wbox.apply_cwt(chunks, decimate=self.decimate)
