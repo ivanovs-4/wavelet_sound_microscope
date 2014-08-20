@@ -29,7 +29,10 @@ class Composition(object):
         log.debug('Fragment samples: %s', self.nsamples)
 
         self.norma_window_len = 301
-        log.debug(u'Norma window len: %s', self.norma_window_len)
+        log.debug('Norma window len: %s', self.norma_window_len)
+
+    def prepare_wbox(self):
+        return self.wbox
 
     def prepare_wbox(self):
         return self.wbox
@@ -56,7 +59,7 @@ class Composition(object):
     @cached_property
     def chunks_count(self):
         count = (self.sound_file.frames - 1) // (self.nsamples // 2) + 1
-        log.debug(u'Chunks count: %s', count)
+        log.debug('Chunks count: %s', count)
 
         return count
 
