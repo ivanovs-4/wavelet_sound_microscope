@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QPainter, QPixmap
+from PyQt5.QtGui import QPainter, QPixmap, QImage
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView
 
 
@@ -17,7 +17,17 @@ class SpectrogramQGraphicsView(QGraphicsView):
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         # self.setMouseTracking(True)
 
-    def show_image(self, image):
+    def show_image(self, im):
+        if im.mode != 'RGB':
+            im = im.convert('RGB')
+
+        # buf_data = im.tostring('raw', 'BGRX')
+        # image = QImage(buf_data, im.size[0], im.size[1],
+        #                QImage.Format_RGB32)
+
+        im.save('/tmp/spectrogram.png')
+        image = QImage('/tmp/spectrogram.png')
+
         self.scene.clear()
         self.scene.addPixmap(QPixmap.fromImage(image))
 
