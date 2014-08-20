@@ -22,12 +22,6 @@ class MainWindow(HelperQMainWindow):
 
         self.composition = None
 
-        self.cook_composition = partial(
-            Composition,
-            # statusbar = StatusbarInterface(self.statusBar()),
-            # progressbar = ProgressBarInterface(self.progressbar)
-        )
-
         self.spectrogram = SpectrogramQGraphicsView()
         self.spectrogram.setMinimumSize(200, 200)
         self.setCentralWidget(self.spectrogram)
@@ -82,7 +76,7 @@ class MainWindow(HelperQMainWindow):
 
     def load_file(self, fname):
         try:
-            self.composition = self.cook_composition(fname)
+            self.composition = Composition(fname)
         except Exception as e:
             message = repr(e)
         else:

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import logging
 import os
-from functools import partial
 
 import click
 
@@ -9,19 +8,26 @@ from composition import Composition
 
 
 logging.basicConfig()
+logging.getLogger('').setLevel(logging.DEBUG)
+
+log = logging.getLogger(__name__)
 
 
-progressbar = partial(
-    click.progressbar,
-    fill_char=click.style('#', fg='magenta')
-)
+class CompositionWithProgressbar(Composition):
+    def get_whole_image(self, chunks, decimate):
+        with click.progressbar(chunks,
+                               label='Calculating wavelet transformation',
+                               fill_char=click.style('#', fg='magenta'),
+                               ) as chunks_:
+            return super(CompositionWithProgressbar, self). \
+                get_whole_image(chunks_, decimate)
 
 
 @click.command()
 @click.argument('source_sound_file', type=click.Path(exists=True))
 @click.option('--norma_window_len', type=int, default=301)
 def main(source_sound_file, norma_window_len):
-    composition = Composition(source_sound_file, progressbar=progressbar)
+    composition = CompositionWithProgressbar(source_sound_file)
 
     img = composition.get_image(norma_window_len=norma_window_len)
 
