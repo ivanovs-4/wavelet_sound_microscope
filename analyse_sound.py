@@ -8,9 +8,6 @@ from composition import Composition
 
 
 logging.basicConfig()
-logging.getLogger('').setLevel(logging.DEBUG)
-
-log = logging.getLogger(__name__)
 
 
 class CompositionWithProgressbar(Composition):
@@ -25,8 +22,13 @@ class CompositionWithProgressbar(Composition):
 
 @click.command()
 @click.argument('source_sound_file', type=click.Path(exists=True))
+@click.argument('destination_image_file', type=click.Path(), required=False)
 @click.option('--norma_window_len', type=int, default=301)
-def main(source_sound_file, norma_window_len):
+@click.option('--verbose/--silent', default=False)
+def main(source_sound_file, destination_image_file, norma_window_len, verbose):
+    if verbose:
+        logging.getLogger('').setLevel(logging.DEBUG)
+
     composition = CompositionWithProgressbar(source_sound_file)
 
     img = composition.get_image(norma_window_len=norma_window_len)
@@ -34,10 +36,11 @@ def main(source_sound_file, norma_window_len):
     file_dir, file_name = os.path.split(source_sound_file)
     sound_name, ext = os.path.splitext(file_name)
 
-    whole_image_file_name = '{}.jpg'.format(sound_name)
-    whole_image_file = os.path.join('.', whole_image_file_name)
+    if not destination_image_file:
+        name = '{}.jpg'.format(sound_name)
+        destination_image_file = os.path.join('.', name)
 
-    img.save(whole_image_file)
+    img.save(destination_image_file)
 
 
 if __name__ == '__main__':
