@@ -31,6 +31,9 @@ class Composition(object):
         self.norma_window_len = 301
         log.debug(u'Norma window len: %s', self.norma_window_len)
 
+    def prepare_wbox(self):
+        return self.wbox
+
     @cached_property
     def wbox(self):
         return WaveletBox(self.nsamples, time_step=1,
