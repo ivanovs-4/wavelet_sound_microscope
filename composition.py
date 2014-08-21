@@ -21,18 +21,15 @@ class Composition(object):
             1 + int(np.log2(self.sound_file.sample_rate - 1))
         )
 
-        self.decimation_factor = 7
+        self.decimation_factor = 8
         self.decimate = self.nsamples // 2 ** self.decimation_factor
 
         log.debug('Bitrate: %s', self.sound_file.sample_rate)
         log.debug('Sound samples: %s', self.sound_file.frames)
         log.debug('Fragment samples: %s', self.nsamples)
 
-        self.norma_window_len = 301
+        self.norma_window_len = 501
         log.debug('Norma window len: %s', self.norma_window_len)
-
-    def prepare_wbox(self):
-        return self.wbox
 
     def prepare_wbox(self):
         return self.wbox
@@ -40,7 +37,7 @@ class Composition(object):
     @cached_property
     def wbox(self):
         return WaveletBox(self.nsamples, time_step=1,
-                          scale_resolution=1 / 24., omega0=40)
+                          scale_resolution=1 / 72, omega0=70)
 
     @cached_property
     def whole_image(self):

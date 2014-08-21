@@ -2,62 +2,43 @@
 import logging
 import os
 import sys
-from contextlib import contextmanager
 from functools import partial
 from PIL.Image import Image
 
-from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, QObject, pyqtSlot, pyqtSignal, QThread
+from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, QObject, pyqtSignal, QThread
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QLabel, QFileDialog, QFrame
-
 from gui.helperqmainwindow import HelperQMainWindow
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
+from composition_worker import CompositionWorker
 
 
 __version__ = '1.0.0'
 
-logging.basicConfig()
+logging.basicConfig(format='%(levelname)s\t[%(threadName)s]\t%(filename)s:%(lineno)d\t%(message)s')
 logging.getLogger('').setLevel(logging.DEBUG)
 
 log = logging.getLogger(__name__)
 
 
-@contextmanager
-def statusbar(val):
-    log.debug('Status before %s', val)
-    yield
-    log.debug('Status after %s', val)
-
-
-class CompositionWorker(QObject):
-    def __init__(self, filename):
-        self.filename = filename
-        super().__init__()
-
-    @pyqtSlot()
-    def process(self):
-        from composition import Composition
-        log.debug('Before Image processed')
-        self.composition = Composition(self.filename)
-
-        with statusbar('Prepare composition Wavelet Box'):
-            self.composition.prepare_wbox()
-
-        image = self.composition.get_image()
-        log.debug('Image processed')
-        self.processed.emit(image)
-        self.finished.emit()
-
-    processed = pyqtSignal(Image)
-    finished = pyqtSignal()
-
-
 class MainWindow(HelperQMainWindow):
+    loading_file = pyqtSignal(str)
+    worker_analyse = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.filename = None
+        self.worker = worker = CompositionWorker()
+
+        worker.message.connect(self.update_status)
+        worker.loading_file_ok.connect(self.analyse)
+        worker.loading_file_error.connect(self.stop_loading)
+        worker.processed.connect(self.update_spectrogram)
+
+        self.loading_file.connect(worker.load_file)
+        self.worker_analyse.connect(worker.process)
+
+        self.fname = None
 
         self.spectrogram = SpectrogramQGraphicsView()
         self.spectrogram.setMinimumSize(200, 200)
@@ -72,7 +53,7 @@ class MainWindow(HelperQMainWindow):
 
         file_open_action = self.create_action(
             '&Open...', self.file_open, QKeySequence.Open, 'fileopen',
-            'Open an existing image file'
+            'Open sound file'
         )
 
         file_quit_action = self.create_action(
@@ -97,8 +78,8 @@ class MainWindow(HelperQMainWindow):
         if not self.ok_to_continue():
             return
 
-        path = (os.path.dirname(self.filename)
-               if self.filename is not None else '.')
+        path = (os.path.dirname(self.fname)
+               if self.fname is not None else '.')
         formats = ['*.wav', '*.flac']
 
         fname, fmts = QFileDialog.getOpenFileName(
@@ -112,36 +93,18 @@ class MainWindow(HelperQMainWindow):
             self.load_file(fname)
 
     def load_file(self, fname):
-        self.filename = fname
+        log.info('MainWindow.load_file: %s', fname)
 
-        # try:
-        #     self.composition = Composition(fname)
+        self.fname = fname
 
-        # except Exception as e:
-        #     self.update_status(repr(e))
+        if self.ok_to_continue():
+            self.loading_file.emit(self.fname)
 
-        # else:
-        #     self.update_status('Opened {0} ...'.format(os.path.basename(fname)))
-        #     self.update_spectrogram()
+    def stop_loading(self):
+        pass
 
-        # if not self.composition:
-            # return
-
-        self.worker = CompositionWorker(self.filename)
-        log.debug('Worker created')
-        self.thread = QThread()
-        self.worker.moveToThread(self.thread)
-        self.thread.started.connect(self.worker.process)
-        # self.worker.finished.connect(self.thread.quit)
-        # self.worker.finished.connect(self.worker.deleteLater)
-        # self.thread.finished.connect(self.thread.deleteLater)
-        self.thread.finished.connect(self.thread_finished)
-        self.worker.processed.connect(self.update_spectrogram)
-        self.thread.start()
-        log.debug('Thread started')
-
-    def thread_finished(self):
-        log.debug('Thread finished')
+    def analyse(self):
+        self.worker_analyse.emit()
 
     def update_spectrogram(self, image):
         log.debug('Run update_spectrogram %s', image)
@@ -150,19 +113,25 @@ class MainWindow(HelperQMainWindow):
     def load_initial_file(self):
         settings = QSettings()
         fname = settings.value('LastFile')
+
         if fname and QFile.exists(fname):
             self.load_file(fname)
 
-    def update_status(self, message):
-        self.statusBar().showMessage(message, 5000)
+    def update_status(self, msg):
+        self.statusBar().showMessage(msg)
 
     def closeEvent(self, event):
         if self.ok_to_continue():
+            self.worker.finish()
+
             settings = QSettings()
-            if self.filename:
-                settings.setValue("LastFile", self.filename)
+
+            if self.fname:
+                settings.setValue("LastFile", self.fname)
+
             settings.setValue('MainWindow/Geometry',
                               QVariant(self.saveGeometry()))
+
             settings.setValue('MainWindow/State',
                               QVariant(self.saveState()))
         else:
