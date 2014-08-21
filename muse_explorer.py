@@ -2,15 +2,14 @@
 import logging
 import os
 import sys
-from functools import partial
-from PIL.Image import Image
 
-from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, QObject, pyqtSignal, QThread
+from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QLabel, QFileDialog, QFrame
+
+from composition_worker import CompositionWorker
 from gui.helperqmainwindow import HelperQMainWindow
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
-from composition_worker import CompositionWorker
 
 
 __version__ = '1.0.0'

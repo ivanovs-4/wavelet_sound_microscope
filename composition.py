@@ -67,3 +67,13 @@ class Composition(object):
             nolmalize_horizontal_smooth(abs_image, norma_window_len)
 
         return toimage(apply_colormap(abs_image))
+
+
+class CompositionProgress(Composition):
+    def __init__(self, fname, progress):
+        self.progress = progress
+        super().__init__(fname)
+
+    def get_whole_image(self, chunks, decimate):
+        with self.progress(chunks) as chunks_:
+            return super().get_whole_image(chunks_, decimate)
