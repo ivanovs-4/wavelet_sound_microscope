@@ -15,3 +15,5 @@ On Geforce GT 630 it is about 3 x realtime.
 * Long cache composition results
 * Use smooth horizontal normalization
 * Spectrogram area selection
+* Zoom and play selected area
+* Debian package
