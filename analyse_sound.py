@@ -2,24 +2,16 @@
 import logging
 import os
 from contextlib import contextmanager
+from functools import partial
 
 import click
 
-from composition import Composition
+from composition import CompositionProgress
 
 
 logging.basicConfig()
 
 log = logging.getLogger(__name__)
-
-
-class CompositionWithProgressbar(Composition):
-    def get_whole_image(self, chunks, decimate):
-        with click.progressbar(chunks,
-                               label='Calculating wavelet transformation',
-                               fill_char=click.style('#', fg='magenta'),
-                               ) as chunks_:
-            return super().get_whole_image(chunks_, decimate)
 
 
 @contextmanager
@@ -38,7 +30,13 @@ def main(source_sound_file, destination_image_file, norma_window_len, verbose):
     if verbose:
         logging.getLogger('').setLevel(logging.DEBUG)
 
-    composition = CompositionWithProgressbar(source_sound_file)
+    progress = partial(
+        click.progressbar,
+        label='Calculating wavelet transformation',
+        fill_char=click.style('#', fg='magenta'),
+    )
+
+    composition = CompositionProgress(source_sound_file, progress)
 
     with statusbar('Prepare Wavelet Box'):
         composition.prepare_wbox()
