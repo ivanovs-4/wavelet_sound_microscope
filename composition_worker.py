@@ -61,7 +61,7 @@ class CompositionWorker(QObject):
     def load_file(self, fname):
         self.update_status('Loading...')
 
-        from composition import CompositionProgress
+        from composition import CompositionWithProgressbar
 
         log.info('CompositionWorker.load_file: %s', fname)
 
@@ -70,7 +70,7 @@ class CompositionWorker(QObject):
         progress = partial(DummyProgressbar, setter=self.set_progress_value)
 
         try:
-            self.composition = CompositionProgress(fname, progress)
+            self.composition = CompositionWithProgressbar(fname, progress)
 
         except Exception as e:
             log.error('Create composition error: %s', repr(e))

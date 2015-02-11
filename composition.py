@@ -69,7 +69,7 @@ class Composition(object):
         return toimage(apply_colormap(abs_image))
 
 
-class CompositionProgress(Composition):
+class CompositionWithProgressbar(Composition):
     def __init__(self, fname, progress):
         self.progress = progress
         super().__init__(fname)
