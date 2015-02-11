@@ -70,10 +70,10 @@ class Composition(object):
 
 
 class CompositionWithProgressbar(Composition):
-    def __init__(self, fname, progress):
-        self.progress = progress
+    def __init__(self, fname, progressbar):
+        self.progressbar = progressbar
         super().__init__(fname)
 
     def get_whole_image(self, chunks, decimate):
-        with self.progress(chunks) as chunks_:
+        with self.progressbar(chunks) as chunks_:
             return super().get_whole_image(chunks_, decimate)

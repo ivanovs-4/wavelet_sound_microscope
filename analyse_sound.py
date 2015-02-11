@@ -30,13 +30,13 @@ def main(source_sound_file, destination_image_file, norma_window_len, verbose):
     if verbose:
         logging.getLogger('').setLevel(logging.DEBUG)
 
-    progress = partial(
+    progressbar = partial(
         click.progressbar,
         label='Calculating wavelet transformation',
         fill_char=click.style('#', fg='magenta'),
     )
 
-    composition = CompositionWithProgressbar(source_sound_file, progress)
+    composition = CompositionWithProgressbar(source_sound_file, progressbar)
 
     with statusbar('Prepare Wavelet Box'):
         composition.prepare_wbox()

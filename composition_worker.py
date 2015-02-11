@@ -67,10 +67,10 @@ class CompositionWorker(QObject):
 
         self.fname = fname
 
-        progress = partial(DummyProgressbar, setter=self.set_progress_value)
+        progressbar = partial(DummyProgressbar, setter=self.set_progress_value)
 
         try:
-            self.composition = CompositionWithProgressbar(fname, progress)
+            self.composition = CompositionWithProgressbar(fname, progressbar)
 
         except Exception as e:
             log.error('Create composition error: %s', repr(e))
