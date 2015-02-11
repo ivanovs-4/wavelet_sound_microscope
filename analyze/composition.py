@@ -4,9 +4,9 @@ import numpy as np
 from pysoundfile import SoundFile
 from scipy.misc import toimage
 
-from media import apply_colormap, wav_chunks_from_sound_file, nolmalize_horizontal_smooth
+from .media import apply_colormap, wav_chunks_from_sound_file, nolmalize_horizontal_smooth
+from .wavelet.cuda_backend import WaveletBox
 from utils import cached_property, CountedIterable
-from wavelet_analyse.cuda_backend import WaveletBox
 
 
 log = logging.getLogger(__name__)

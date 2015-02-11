@@ -7,7 +7,7 @@ from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QLabel, QFileDialog, QFrame
 
-from composition_worker import CompositionWorker
+from gui.composition_worker import CompositionWorker
 from gui.helperqmainwindow import HelperQMainWindow
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 

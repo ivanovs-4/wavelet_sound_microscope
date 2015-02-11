@@ -6,7 +6,7 @@ from functools import partial
 
 import click
 
-from composition import CompositionWithProgressbar
+from analyze.composition import CompositionWithProgressbar
 
 
 logging.basicConfig()

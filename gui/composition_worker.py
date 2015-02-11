@@ -61,7 +61,7 @@ class CompositionWorker(QObject):
     def load_file(self, fname):
         self.update_status('Loading...')
 
-        from composition import CompositionWithProgressbar
+        from analyze.composition import CompositionWithProgressbar
 
         log.info('CompositionWorker.load_file: %s', fname)
 
