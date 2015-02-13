@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, pyqtSignal
+from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QAction QApplication, QFileDialog, QFrame, QLabel, QMainWindow,
@@ -22,21 +22,15 @@ log = logging.getLogger(__name__)
 
 
 class MainWindow(QMainWindow):
-    loading_file = pyqtSignal(str)
-    worker_analyse = pyqtSignal()
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.worker = worker = QCompositionWorker()
+        self.composition_worker = QCompositionWorker()
 
-        worker.message.connect(self.update_status)
-        worker.load_file_ok.connect(self.analyse)
-        worker.load_file_error.connect(self.stop_loading)
-        worker.processed.connect(self.update_spectrogram)
-
-        self.loading_file.connect(worker.load_file)
-        self.worker_analyse.connect(worker.process)
+        self.composition_worker.message.connect(self.update_status)
+        self.composition_worker.load_file_ok.connect(self.on_file_loaded)
+        self.composition_worker.load_file_error.connect(self.stop_loading)
+        self.composition_worker.process_ok.connect(self.update_spectrogram)
 
         self.fname = None
 
@@ -98,13 +92,14 @@ class MainWindow(QMainWindow):
         self.fname = fname
 
         if self.ok_to_continue():
-            self.loading_file.emit(self.fname)
+            self.composition_worker.load_file.emit(self.fname)
 
     def stop_loading(self):
         pass
 
-    def analyse(self):
-        self.worker_analyse.emit()
+    def on_file_loaded(self):
+        # When file loaded immediately start process it
+        self.composition_worker.process.emit()
 
     def update_spectrogram(self, image):
         log.debug('Run update_spectrogram %s', image)
@@ -122,7 +117,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.ok_to_continue():
-            self.worker.finish()
+            self.composition_worker.finish()
 
             settings = QSettings()
 

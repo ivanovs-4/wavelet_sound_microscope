@@ -33,45 +33,56 @@ class DummyProgressbar(collections.Iterator):
         return next(self.iterable)
 
 
-class CompositionWorker(QObject):
+class QCompositionWorker(QObject):
     def __init__(self):
         super().__init__()
         self.thread = QThread()
-        thread = self.thread
-        worker = self
 
-        worker.moveToThread(thread)
-        thread.start()
+        self.moveToThread(self.thread)
+        self.thread.start()
 
-        worker.finished.connect(self.worker_finished)
-        worker.finished.connect(thread.quit)
-        worker.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(self.thread_finished)
+        # Thread initialisation
+        self.finished.connect(self.thread.quit)
+        self.finished.connect(self.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
 
+        # For debug threading
+        self.finished.connect(self._finished)
+        self.thread.finished.connect(self._thread_finished)
+
+        # Content
+        self.load_file.connect(self._load_file)
+        self.process.connect(self._process)
+
+    load_file = pyqtSignal()
     load_file_ok = pyqtSignal()
     load_file_error = pyqtSignal()
 
-    processed = pyqtSignal(Image)
+    process = pyqtSignal()
+    process_ok = pyqtSignal(Image)
+
     message = pyqtSignal(str)
 
     finished = pyqtSignal()
 
-    def worker_finished(self):
+    def finish(self):
+        self.finished.emit()
+
+    def _finished(self):
         log.info('Worker finished')
 
-    def thread_finished(self):
+    def _thread_finished(self):
         log.debug('Thread finished')
 
     def set_progress_value(self, val):
-        self.update_status('Progress value: {}'.format(val))
+        self._message('Progress value: {}'.format(val))
 
-    def load_file(self, fname):
-        self.update_status('Loading...')
+    def _load_file(self, fname):
+        self._message('Loading...')
 
         from analyze.composition import CompositionWithProgressbar
 
-        log.info('CompositionWorker.load_file: %s', fname)
+        log.info('CompositionWorker._load_file: %s', fname)
 
         self.fname = fname
 
@@ -82,30 +93,27 @@ class CompositionWorker(QObject):
 
         except Exception as e:
             log.error('Create composition error: %s', repr(e))
-            self.update_status(repr(e))
+            self._message(repr(e))
             self.load_file_error.emit()
 
             return
 
         else:
             log.info('Create composition ok')
-            self.update_status('Opened {0}'.format(os.path.basename(fname)))
+            self._message('Opened {0}'.format(os.path.basename(fname)))
             self.load_file_ok.emit()
 
-    def process(self):
+    def _process(self):
         log.debug('Before Image processed')
 
-        self.update_status('Prepare composition Wavelet Box')
+        self._message('Prepare composition Wavelet Box')
         self.composition.prepare_wbox()
 
-        self.update_status('Analyse')
+        self._message('Analyse')
         image = self.composition.get_image()
         log.debug('Image processed')
-        self.processed.emit(image)
-        self.update_status('Done')
+        self.process_ok.emit(image)
+        self._message('Done')
 
-    def update_status(self, msg):
+    def _message(self, msg):
         self.message.emit(msg)
-
-    def finish(self):
-        self.finished.emit()
