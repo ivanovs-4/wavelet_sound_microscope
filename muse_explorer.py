@@ -7,7 +7,7 @@ from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QLabel, QFileDialog, QFrame
 
-from gui.composition_worker import CompositionWorker
+from gui.composition_worker import QCompositionWorker
 from gui.helperqmainwindow import HelperQMainWindow
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
@@ -27,11 +27,11 @@ class MainWindow(HelperQMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.worker = worker = CompositionWorker()
+        self.worker = worker = QCompositionWorker()
 
         worker.message.connect(self.update_status)
-        worker.loading_file_ok.connect(self.analyse)
-        worker.loading_file_error.connect(self.stop_loading)
+        worker.load_file_ok.connect(self.analyse)
+        worker.load_file_error.connect(self.stop_loading)
         worker.processed.connect(self.update_spectrogram)
 
         self.loading_file.connect(worker.load_file)

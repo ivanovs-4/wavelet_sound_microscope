@@ -49,6 +49,14 @@ class CompositionWorker(QObject):
         thread.finished.connect(thread.deleteLater)
         thread.finished.connect(self.thread_finished)
 
+    load_file_ok = pyqtSignal()
+    load_file_error = pyqtSignal()
+
+    processed = pyqtSignal(Image)
+    message = pyqtSignal(str)
+
+    finished = pyqtSignal()
+
     def worker_finished(self):
         log.info('Worker finished')
 
@@ -75,14 +83,14 @@ class CompositionWorker(QObject):
         except Exception as e:
             log.error('Create composition error: %s', repr(e))
             self.update_status(repr(e))
-            self.loading_file_error.emit()
+            self.load_file_error.emit()
 
             return
 
         else:
             log.info('Create composition ok')
             self.update_status('Opened {0}'.format(os.path.basename(fname)))
-            self.loading_file_ok.emit()
+            self.load_file_ok.emit()
 
     def process(self):
         log.debug('Before Image processed')
@@ -96,16 +104,8 @@ class CompositionWorker(QObject):
         self.processed.emit(image)
         self.update_status('Done')
 
-    loading_file_ok = pyqtSignal()
-    loading_file_error = pyqtSignal()
-
-    processed = pyqtSignal(Image)
-    message = pyqtSignal(str)
-
     def update_status(self, msg):
         self.message.emit(msg)
-
-    finished = pyqtSignal()
 
     def finish(self):
         self.finished.emit()
