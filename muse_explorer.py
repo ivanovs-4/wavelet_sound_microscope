@@ -5,10 +5,11 @@ import sys
 
 from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile, pyqtSignal
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QApplication, QLabel, QFileDialog, QFrame
+from PyQt5.QtWidgets import (
+    QAction QApplication, QFileDialog, QFrame, QLabel, QMainWindow,
+)
 
 from gui.composition_worker import QCompositionWorker
-from gui.helperqmainwindow import HelperQMainWindow
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
 
@@ -20,7 +21,7 @@ logging.getLogger('').setLevel(logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
-class MainWindow(HelperQMainWindow):
+class MainWindow(QMainWindow):
     loading_file = pyqtSignal(str)
     worker_analyse = pyqtSignal()
 
@@ -138,6 +139,28 @@ class MainWindow(HelperQMainWindow):
 
     def ok_to_continue(self):
         return True
+
+    # Helper functions
+    def create_action(self, text, slot=None, shortcut=None, icon=None,
+                      tip=None, checkable=False, signal_name='triggered'):
+        action = QAction(text, self)
+        if shortcut is not None:
+            action.setShortcut(shortcut)
+        if tip is not None:
+            action.setToolTip(tip)
+            action.setStatusTip(tip)
+        if slot is not None:
+            getattr(action, signal_name).connect(slot)
+        if checkable:
+            action.setCheckable(True)
+        return action
+
+    def add_actions(self,target, actions):
+        for action in actions:
+            if action is None:
+                target.addSeparator()
+            else:
+                target.addAction(action)
 
 
 def main():
