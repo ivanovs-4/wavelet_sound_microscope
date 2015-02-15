@@ -6,7 +6,10 @@ from PIL.Image import Image
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
 from .threading import QThreadedWorkerDebug as QThreadedWorker
+from analyze.composition import CompositionWithProgressbar
+from analyze.media.sound import ChunksProviderFromSoundFile
 from utils import ProgressProxy
+
 
 
 log = logging.getLogger(__name__)
@@ -60,6 +63,7 @@ class QCompositionWorker(QThreadedWorker):
 
     process = pyqtSignal()
     process_ok = pyqtSignal(Image)
+    process_error = pyqtSignal()
 
     message = pyqtSignal(str)
 
@@ -69,13 +73,25 @@ class QCompositionWorker(QThreadedWorker):
     def _load_file(self, fname):
         self._message('Loading...')
 
-        from analyze.composition import (
-            ChunksProviderFromSoundFile, CompositionWithProgressbar
-        )
-
         log.debug('CompositionWorker._load_file: %s', fname)
 
         self.fname = fname
+
+        try:
+            self.chunks_provider = ChunksProviderFromSoundFile(fname)
+
+        except Exception as e:
+            log.exception('Load file error: %s', repr(e))
+            self._message(repr(e))
+            self.load_file_error.emit()
+
+        else:
+            log.debug('Load file ok')
+            self._message('Opened {0}'.format(os.path.basename(fname)))
+            self.load_file_ok.emit()
+
+    def _process(self):
+        log.debug('Before Image processed')
 
         progressbar = partial(ProgressProxyToProgressDialog,
                               self.progress_dialog)
@@ -83,28 +99,21 @@ class QCompositionWorker(QThreadedWorker):
         try:
             self.composition = CompositionWithProgressbar(
                 progressbar,
-                ChunksProviderFromSoundFile(fname),
+                self.chunks_provider,
                 scale_resolution=1/72,
                 omega0=70,
                 decimation_factor=7
             )
 
-        except Exception as e:
-            log.exception('Create composition error: %s', repr(e))
-            self._message(repr(e))
-            self.load_file_error.emit()
+        except Exception:
+            log.exception('Composition create error')
+            self._message('Composition create error')
+            self.process_error.emit()
 
-        else:
-            log.debug('Create composition ok')
-            self._message('Opened {0}'.format(os.path.basename(fname)))
-            self.load_file_ok.emit()
-
-    def _process(self):
-        log.debug('Before Image processed')
+            return
 
         self._message('Prepare composition Wavelet Box')
         self.composition.prepare_wbox()
-
         self._message('Analyse')
 
         try:
@@ -113,12 +122,13 @@ class QCompositionWorker(QThreadedWorker):
         except CompositionCanceled:
             log.debug('Composition canceled')
             self._message('Composition canceled')
-            self.load_file_error.emit()
+            self.process_error.emit()
 
-        else:
-            log.debug('Image processed')
-            self.process_ok.emit(image)
-            self._message('Done')
+            return
+
+        log.debug('Image processed')
+        self.process_ok.emit(image)
+        self._message('Done')
 
     def _message(self, msg):
         self.message.emit(msg)

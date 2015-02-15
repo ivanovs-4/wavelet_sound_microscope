@@ -1,19 +1,5 @@
-from itertools import repeat, takewhile
-
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-
-
-def chunk_sound_file(sound_file, size):
-    return takewhile(len, map(sound_file.read, repeat(size)))
-
-
-def one_channel(wav, channel_num=0):
-    return wav[:, channel_num]
-
-
-def wav_chunks_from_sound_file(sound_file, size):
-    return map(one_channel, chunk_sound_file(sound_file, size))
 
 
 lightfire_colormap = LinearSegmentedColormap.from_list(
