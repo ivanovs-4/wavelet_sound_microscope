@@ -7,6 +7,7 @@ from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QAction, QApplication, QFileDialog, QFrame, QLabel, QMainWindow,
+    QProgressDialog,
 )
 
 from gui.composition_worker import QCompositionWorker
@@ -117,7 +118,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.ok_to_continue():
-            self.composition_worker.finish.emit()
+            self.composition_worker.finish()
 
             settings = QSettings()
 

@@ -42,22 +42,30 @@ class QThreadedWorker(QObject):
         self.thread.start()
 
         # Thread initialisation
-        self.finish.connect(self.thread.quit)
-        self.finish.connect(self.deleteLater)
+        self.finished.connect(self.thread.quit)
+        self.finished.connect(self.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
-        # For debug threading
-        self.finish.connect(self._finish)
+    finished = pyqtSignal()
+
+    def finish(self):
+        self.finished.emit()
+
+
+class QThreadedWorkerDebug(QThreadedWorker):
+    def __init__(self):
+        super().__init__()
+        self.finished.connect(self._finished)
         self.thread.finished.connect(self._thread_finished)
 
-    def _finish(self):
+    def _finished(self):
         log.info('Worker finished')
 
     def _thread_finished(self):
         log.debug('Thread finished')
 
 
-class QCompositionWorker(QThreadedWorker):
+class QCompositionWorker(QThreadedWorkerDebug):
     def __init__(self):
         super().__init__()
         self.load_file.connect(self._load_file)
@@ -71,8 +79,6 @@ class QCompositionWorker(QThreadedWorker):
     process_ok = pyqtSignal(Image)
 
     message = pyqtSignal(str)
-
-    finish = pyqtSignal()
 
     def set_progress_value(self, val):
         self._message('Progress value: {}'.format(val))
