@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.ok_to_continue():
-            self.composition_worker.finish()
+            self.composition_worker.finish.emit()
 
             settings = QSettings()
 

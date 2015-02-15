@@ -33,7 +33,7 @@ class DummyProgressbar(collections.Iterator):
         return next(self.iterable)
 
 
-class QCompositionWorker(QObject):
+class QThreadedWorker(QObject):
     def __init__(self):
         super().__init__()
         self.thread = QThread()
@@ -42,15 +42,24 @@ class QCompositionWorker(QObject):
         self.thread.start()
 
         # Thread initialisation
-        self.finished.connect(self.thread.quit)
-        self.finished.connect(self.deleteLater)
+        self.finish.connect(self.thread.quit)
+        self.finish.connect(self.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
         # For debug threading
-        self.finished.connect(self._finished)
+        self.finish.connect(self._finish)
         self.thread.finished.connect(self._thread_finished)
 
-        # Content
+    def _finish(self):
+        log.info('Worker finished')
+
+    def _thread_finished(self):
+        log.debug('Thread finished')
+
+
+class QCompositionWorker(QThreadedWorker):
+    def __init__(self):
+        super().__init__()
         self.load_file.connect(self._load_file)
         self.process.connect(self._process)
 
@@ -63,16 +72,7 @@ class QCompositionWorker(QObject):
 
     message = pyqtSignal(str)
 
-    finished = pyqtSignal()
-
-    def finish(self):
-        self.finished.emit()
-
-    def _finished(self):
-        log.info('Worker finished')
-
-    def _thread_finished(self):
-        log.debug('Thread finished')
+    finish = pyqtSignal()
 
     def set_progress_value(self, val):
         self._message('Progress value: {}'.format(val))
