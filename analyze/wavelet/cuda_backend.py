@@ -5,7 +5,7 @@ import pycuda.gpuarray as gpuarray
 from pycuda.elementwise import ElementwiseKernel
 
 from .base import BaseWaveletBox
-from pyfft.cuda import Plan
+from .pyfft.cuda import Plan
 
 
 PI2 = 2 * np.pi
