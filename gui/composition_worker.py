@@ -69,7 +69,9 @@ class QCompositionWorker(QThreadedWorker):
     def _load_file(self, fname):
         self._message('Loading...')
 
-        from analyze.composition import CompositionWithProgressbar
+        from analyze.composition import (
+            ChunksProviderFromSoundFile, CompositionWithProgressbar
+        )
 
         log.debug('CompositionWorker._load_file: %s', fname)
 
@@ -80,15 +82,15 @@ class QCompositionWorker(QThreadedWorker):
 
         try:
             self.composition = CompositionWithProgressbar(
-                fname,
                 progressbar,
+                ChunksProviderFromSoundFile(fname),
                 scale_resolution=1/72,
                 omega0=70,
                 decimation_factor=7
             )
 
         except Exception as e:
-            log.error('Create composition error: %s', repr(e))
+            log.exception('Create composition error: %s', repr(e))
             self._message(repr(e))
             self.load_file_error.emit()
 

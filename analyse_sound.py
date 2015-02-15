@@ -6,7 +6,9 @@ from functools import partial
 
 import click
 
-from analyze.composition import CompositionWithProgressbar
+from analyze.composition import (
+    ChunksProviderFromSoundFile, CompositionWithProgressbar
+)
 
 
 logging.basicConfig()
@@ -36,7 +38,10 @@ def main(source_sound_file, destination_image_file, norma_window_len, verbose):
         fill_char=click.style('#', fg='magenta'),
     )
 
-    composition = CompositionWithProgressbar(source_sound_file, progressbar)
+    composition = CompositionWithProgressbar(
+        progressbar,
+        ChunksProviderFromSoundFile(source_sound_file)
+    )
 
     with statusbar('Prepare Wavelet Box'):
         composition.prepare_wbox()

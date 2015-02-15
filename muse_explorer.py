@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0, self.load_initial_file)
 
     def file_open(self):
-        if not self.ok_to_continue():
+        if not self.ok_to_continue:
             return
 
         path = (os.path.dirname(self.fname)
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
 
         self.fname = fname
 
-        if self.ok_to_continue():
+        if self.ok_to_continue:
             self.composition_worker.load_file.emit(self.fname)
 
     def stop_loading(self):
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(msg)
 
     def closeEvent(self, event):
-        if self.ok_to_continue():
+        if self.ok_to_continue:
             self.composition_worker.finish()
 
             settings = QSettings()
@@ -141,6 +141,7 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
 
+    @property
     def ok_to_continue(self):
         return True
 
