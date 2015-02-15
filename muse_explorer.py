@@ -6,7 +6,7 @@ import sys
 from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
-    QAction QApplication, QFileDialog, QFrame, QLabel, QMainWindow,
+    QAction, QApplication, QFileDialog, QFrame, QLabel, QMainWindow,
 )
 
 from gui.composition_worker import QCompositionWorker

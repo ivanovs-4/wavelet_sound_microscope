@@ -4,7 +4,7 @@ import pycuda.driver as cuda
 import pycuda.gpuarray as gpuarray
 from pycuda.elementwise import ElementwiseKernel
 
-from .wavelet.base import BaseWaveletBox
+from .base import BaseWaveletBox
 from pyfft.cuda import Plan
 
 

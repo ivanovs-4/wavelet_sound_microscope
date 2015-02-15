@@ -1,6 +1,5 @@
 python3-matplotlib
 python3-pil
-pyqt5-dev        
-pyqt5-dev-tools  
+pyqt5-dev
+pyqt5-dev-tools
 python3-pycuda
-

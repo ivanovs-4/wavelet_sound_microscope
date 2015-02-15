@@ -54,7 +54,7 @@ class QCompositionWorker(QObject):
         self.load_file.connect(self._load_file)
         self.process.connect(self._process)
 
-    load_file = pyqtSignal()
+    load_file = pyqtSignal(str)
     load_file_ok = pyqtSignal()
     load_file_error = pyqtSignal()
 
