@@ -16,7 +16,8 @@ from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
 __version__ = '1.0.0'
 
-logging.basicConfig(format='%(levelname)s\t[%(threadName)s]\t%(filename)s:%(lineno)d\t%(message)s')
+logging.basicConfig(format='%(levelname)s\t[%(threadName)s]\t%(filename)s:'
+                    '%(lineno)d\t%(message)s')
 logging.getLogger('').setLevel(logging.DEBUG)
 
 log = logging.getLogger(__name__)
