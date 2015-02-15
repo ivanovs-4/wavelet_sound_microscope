@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from PyQt5.QtCore import QSettings, QTimer, QVariant, QFile
+from PyQt5.QtCore import QSettings, Qt, QTimer, QVariant, QFile
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QAction, QApplication, QFileDialog, QFrame, QLabel, QMainWindow,
@@ -27,7 +27,9 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
 
         self.progress_dialog = QProgressDialog()
+        self.progress_dialog.setWindowModality(Qt.WindowModal)
         self.progress_dialog.setMinimumDuration(100)
+
         self.composition_worker = QCompositionWorker(self.progress_dialog)
 
         self.composition_worker.message.connect(self.update_status)
@@ -90,7 +92,7 @@ class MainWindow(QMainWindow):
             self.load_file(fname)
 
     def load_file(self, fname):
-        log.info('MainWindow.load_file: %s', fname)
+        log.debug('MainWindow.load_file: %s', fname)
 
         self.fname = fname
 

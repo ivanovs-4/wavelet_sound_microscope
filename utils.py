@@ -12,7 +12,7 @@ class cached_property(object):
         return res
 
 
-class CountedIterable(collections.Iterator):
+class IterableWithLength(collections.Iterator):
     def __init__(self, iterable, length):
         self.iterable = iterable
         self.length = length
@@ -57,16 +57,16 @@ class ProgressProxy(collections.Iterator):
 
     def __next__(self):
         rv = next(self._iterable)
-        self._make_step()
+        self.make_step()
         self.render_progress()
 
         return rv
 
-    def _make_step(self):
-        self.pos += 1
-
     def start(self):
         pass
+
+    def make_step(self):
+        self.pos += 1
 
     def render_progress(self):
         pass

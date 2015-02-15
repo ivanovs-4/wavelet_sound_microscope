@@ -21,8 +21,28 @@ class ProgressProxyToProgressDialog(ProgressProxy):
         self.progress_dialog.reset()
         self.progress_dialog.setRange(0, self.length)
 
+    def make_step(self):
+        super().make_step()
+
+        if self.progress_dialog.wasCanceled():
+            self.cancel()
+
     def render_progress(self):
         self.progress_dialog.setValue(self.pos)
+
+    def done(self):
+        log.debug('ProgressProxyToProgressDialog.done')
+
+        if getattr(self, 'canceled', False):
+            raise CompositionCanceled
+
+    def cancel(self):
+        self.canceled = True
+        raise StopIteration
+
+
+class CompositionCanceled(Exception):
+    pass
 
 
 class QCompositionWorker(QThreadedWorker):
@@ -51,7 +71,7 @@ class QCompositionWorker(QThreadedWorker):
 
         from analyze.composition import CompositionWithProgressbar
 
-        log.info('CompositionWorker._load_file: %s', fname)
+        log.debug('CompositionWorker._load_file: %s', fname)
 
         self.fname = fname
 
@@ -66,10 +86,8 @@ class QCompositionWorker(QThreadedWorker):
             self._message(repr(e))
             self.load_file_error.emit()
 
-            return
-
         else:
-            log.info('Create composition ok')
+            log.debug('Create composition ok')
             self._message('Opened {0}'.format(os.path.basename(fname)))
             self.load_file_ok.emit()
 
@@ -80,10 +98,19 @@ class QCompositionWorker(QThreadedWorker):
         self.composition.prepare_wbox()
 
         self._message('Analyse')
-        image = self.composition.get_image()
-        log.debug('Image processed')
-        self.process_ok.emit(image)
-        self._message('Done')
+
+        try:
+            image = self.composition.get_image()
+
+        except CompositionCanceled:
+            log.debug('Composition canceled')
+            self._message('Composition canceled')
+            self.load_file_error.emit()
+
+        else:
+            log.debug('Image processed')
+            self.process_ok.emit(image)
+            self._message('Done')
 
     def _message(self, msg):
         self.message.emit(msg)
