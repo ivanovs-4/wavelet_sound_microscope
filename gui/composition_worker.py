@@ -1,4 +1,3 @@
-import collections
 import logging
 import os
 from functools import partial
@@ -6,68 +5,32 @@ from functools import partial
 from PIL.Image import Image
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
+from .threading import QThreadedWorkerDebug as QThreadedWorker
+from utils import ProgressProxy
+
 
 log = logging.getLogger(__name__)
 
 
-class DummyProgressbar(collections.Iterator):
-    def __init__(self, iterable, setter, length=None, label=None):
-        self.setter = setter
-        self.counter = 0
+class ProgressProxyToProgressDialog(ProgressProxy):
+    def __init__(self, progress_dialog, *args, **kwargs):
+        self.progress_dialog = progress_dialog
+        super().__init__(*args, **kwargs)
 
-        self.iterable = iterable
+    def start(self):
+        self.progress_dialog.reset()
+        self.progress_dialog.setRange(0, self.length)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, tb):
-        pass
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        self.counter += 1
-        self.setter('Pos {}'.format(self.counter))
-
-        return next(self.iterable)
+    def render_progress(self):
+        self.progress_dialog.setValue(self.pos)
 
 
-class QThreadedWorker(QObject):
-    def __init__(self):
+class QCompositionWorker(QThreadedWorker):
+    def __init__(self, progress_dialog):
         super().__init__()
-        self.thread = QThread()
 
-        self.moveToThread(self.thread)
-        self.thread.start()
+        self.progress_dialog = progress_dialog
 
-        # Thread initialisation
-        self.finished.connect(self.thread.quit)
-        self.finished.connect(self.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-
-    finished = pyqtSignal()
-
-    def finish(self):
-        self.finished.emit()
-
-
-class QThreadedWorkerDebug(QThreadedWorker):
-    def __init__(self):
-        super().__init__()
-        self.finished.connect(self._finished)
-        self.thread.finished.connect(self._thread_finished)
-
-    def _finished(self):
-        log.info('Worker finished')
-
-    def _thread_finished(self):
-        log.debug('Thread finished')
-
-
-class QCompositionWorker(QThreadedWorkerDebug):
-    def __init__(self):
-        super().__init__()
         self.load_file.connect(self._load_file)
         self.process.connect(self._process)
 
@@ -92,7 +55,8 @@ class QCompositionWorker(QThreadedWorkerDebug):
 
         self.fname = fname
 
-        progressbar = partial(DummyProgressbar, setter=self.set_progress_value)
+        progressbar = partial(ProgressProxyToProgressDialog,
+                              self.progress_dialog)
 
         try:
             self.composition = CompositionWithProgressbar(fname, progressbar)

@@ -26,7 +26,9 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.composition_worker = QCompositionWorker()
+        self.progress_dialog = QProgressDialog()
+        self.progress_dialog.setMinimumDuration(100)
+        self.composition_worker = QCompositionWorker(self.progress_dialog)
 
         self.composition_worker.message.connect(self.update_status)
         self.composition_worker.load_file_ok.connect(self.on_file_loaded)
