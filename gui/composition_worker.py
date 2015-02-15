@@ -79,7 +79,13 @@ class QCompositionWorker(QThreadedWorker):
                               self.progress_dialog)
 
         try:
-            self.composition = CompositionWithProgressbar(fname, progressbar)
+            self.composition = CompositionWithProgressbar(
+                fname,
+                progressbar,
+                scale_resolution=1/36,
+                omega0=70,
+                decimation_factor=4
+            )
 
         except Exception as e:
             log.error('Create composition error: %s', repr(e))
