@@ -44,12 +44,15 @@ class MainWindow(QMainWindow):
         self.spectrogram.setMinimumSize(200, 200)
         self.setCentralWidget(self.spectrogram)
 
-        self.size_label = QLabel()
-        self.size_label.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
         status = self.statusBar()
         status.setSizeGripEnabled(False)
-        status.addPermanentWidget(self.size_label)
         status.showMessage('Ready', 5000)
+
+        # self.size_label = QLabel()
+        # self.size_label.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        # status.addPermanentWidget(self.size_label)
+
+        status.addPermanentWidget(self.progress_dialog)
 
         file_open_action = self.create_action(
             '&Open...', self.file_open, QKeySequence.Open, 'fileopen',

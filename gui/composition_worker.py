@@ -82,9 +82,9 @@ class QCompositionWorker(QThreadedWorker):
             self.composition = CompositionWithProgressbar(
                 fname,
                 progressbar,
-                scale_resolution=1/36,
+                scale_resolution=1/72,
                 omega0=70,
-                decimation_factor=4
+                decimation_factor=7
             )
 
         except Exception as e:
