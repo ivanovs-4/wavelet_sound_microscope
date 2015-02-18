@@ -7,7 +7,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
 from .threading import QThreadedWorkerDebug as QThreadedWorker
 from analyze.composition import CompositionWithProgressbar, Spectrogram
-from analyze.media.sound import ChunksProviderFromSoundFile
+from analyze.media.sound import ChunksProvider
 from utils import ProgressProxy
 
 
@@ -51,47 +51,26 @@ class CompositionCanceled(Exception):
 class QCompositionWorker(QThreadedWorker):
     def __init__(self, progress_dialog):
         super().__init__()
-
+        self.composition = None
         self.progress_dialog = progress_dialog
-
-        self.load_file.connect(self._load_file)
         self.process.connect(self._process)
 
-    load_file = pyqtSignal(str)
-    load_file_ok = pyqtSignal()
-    load_file_error = pyqtSignal()
-
-    process = pyqtSignal()
+    process = pyqtSignal(ChunksProvider)
     process_ok = pyqtSignal(Spectrogram)
-    process_error = pyqtSignal()
+    process_error = pyqtSignal(str)
 
     message = pyqtSignal(str)
 
     def set_progress_value(self, val):
         self._message('Progress value: {}'.format(val))
 
-    def _load_file(self, fname):
-        self._message('Loading...')
-
-        log.debug('CompositionWorker._load_file: %s', fname)
-
-        self.fname = fname
-
-        try:
-            self.chunks_provider = ChunksProviderFromSoundFile(fname)
-
-        except Exception as e:
-            log.exception('Load file error: %s', repr(e))
-            self._message(repr(e))
-            self.load_file_error.emit()
-
-        else:
-            log.debug('Load file ok')
-            self._message('Opened {0}'.format(os.path.basename(fname)))
-            self.load_file_ok.emit()
-
-    def _process(self):
+    def _process(self, chunks_provider):
         log.debug('Before Image processed')
+
+        # FIXME Implement jobs queue. Just cancel previous here
+        if self.composition:
+            self._message('Busi')
+            self.process_error.emit('Busi')
 
         progressbar = partial(ProgressProxyToProgressDialog,
                               self.progress_dialog)
@@ -99,7 +78,7 @@ class QCompositionWorker(QThreadedWorker):
         try:
             self.composition = CompositionWithProgressbar(
                 progressbar,
-                self.chunks_provider,
+                chunks_provider,
                 scale_resolution=1/72,
                 omega0=70,
                 decimation_factor=7
@@ -107,12 +86,12 @@ class QCompositionWorker(QThreadedWorker):
 
         except Exception:
             log.exception('Composition create error')
-            self._message('Composition create error')
-            self.process_error.emit()
+            self.process_error.emit('Composition create error')
 
             return
 
         self._message('Prepare composition Wavelet Box')
+        # FIXME implement some sontextmanager on composition.wbox
         self.composition.prepare_wbox()
         self._message('Analyse')
 
@@ -121,15 +100,16 @@ class QCompositionWorker(QThreadedWorker):
 
         except CompositionCanceled:
             log.debug('Composition canceled')
-            self._message('Composition canceled')
-            self.process_error.emit()
+            self.process_error.emit('Composition canceled')
 
             return
+
+        finally:
+            self.composition = None
 
         log.debug('Image processed')
 
         self.process_ok.emit(spectrogram)
-        self._message('Done')
 
     def _message(self, msg):
         self.message.emit(msg)

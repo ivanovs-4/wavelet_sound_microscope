@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
     QProgressDialog,
 )
 
+from analyze.media.sound import ChunksProviderFromSoundFile
 from gui.composition_worker import QCompositionWorker
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
@@ -32,12 +33,12 @@ class MainWindow(QMainWindow):
         self.progress_dialog.setMinimumDuration(100)
 
         self.composition_worker = QCompositionWorker(self.progress_dialog)
-
-        cw = self.composition_worker
-        cw.message.connect(self.update_status)
-        cw.load_file_ok.connect(self.on_file_loaded)
-        cw.load_file_error.connect(self.stop_loading)
-        cw.process_ok.connect(self.on_composition_processed)
+        self.composition_worker.message.connect(self.status_show)
+        self.composition_worker.process_ok.connect(
+            self.on_composition_processed
+        )
+        # Just show process error on status line
+        self.composition_worker.process_error.connect(self.status_show)
 
         self.fname = None
 
@@ -98,21 +99,32 @@ class MainWindow(QMainWindow):
 
     def load_file(self, fname):
         log.debug('MainWindow.load_file: %s', fname)
-
         self.fname = fname
 
-        if self.ok_to_continue:
-            self.composition_worker.load_file.emit(self.fname)
+        if not self.ok_to_continue:
+            log.debug('Not self.ok_to_continue')
 
-    def stop_loading(self):
-        pass
+            return
 
-    def on_file_loaded(self):
+        try:
+            chunks_provider = ChunksProviderFromSoundFile(fname)
+
+        except Exception as e:
+            log.exception('Load file error')
+            self.status_show(repr(e))
+            self.fname = None
+
+            return
+
+        log.debug('Loadaed %s', os.path.basename(fname))
+        self.status_show('Loadaed {0}'.format(os.path.basename(fname)))
+
         # When file loaded immediately start process it
-        self.composition_worker.process.emit()
+        self.composition_worker.process.emit(chunks_provider)
 
     def on_composition_processed(self, spectrogram):
         log.debug('Run update_spectrogram %s', spectrogram)
+        self.status_show('Processed')
         self.spectrogram_view.update_spectrogram(spectrogram)
 
     def load_initial_file(self):
@@ -122,7 +134,7 @@ class MainWindow(QMainWindow):
         if fname and QFile.exists(fname):
             self.load_file(fname)
 
-    def update_status(self, msg):
+    def status_show(self, msg):
         self.statusBar().showMessage(msg)
 
     def closeEvent(self, event):
