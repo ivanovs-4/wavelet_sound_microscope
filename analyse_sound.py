@@ -38,15 +38,12 @@ def main(source_sound_file, destination_image_file, norma_window_len, verbose):
         fill_char=click.style('#', fg='magenta'),
     )
 
-    composition = CompositionWithProgressbar(
-        progressbar,
-        ChunksProviderFromSoundFile(source_sound_file)
-    )
-
     with statusbar('Prepare Wavelet Box'):
-        composition.prepare_wbox()
-
-    img = composition.get_image(norma_window_len=norma_window_len)
+        with CompositionWithProgressbar(
+            progressbar,
+            ChunksProviderFromSoundFile(source_sound_file)
+        ) as composition:
+            img = composition.get_image(norma_window_len=norma_window_len)
 
     file_dir, file_name = os.path.split(source_sound_file)
     sound_name, ext = os.path.splitext(file_name)

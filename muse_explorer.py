@@ -86,7 +86,8 @@ class MainWindow(QMainWindow):
     def on_sound_fragment_selected(self, fragment):
         # FIXME play sound
         self.status_show(
-            'Time: %r Freq: %r' % (fragment.time, fragment.frequency)
+            'Time: {} Freq: {}'.format(repr(fragment.time),
+                                       repr(fragment.frequency))
         )
 
     def file_open(self):

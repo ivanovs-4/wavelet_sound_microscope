@@ -21,12 +21,18 @@ class Composition(object):
         self.norma_window_len = 501
         log.debug('Norma window len: %s', self.norma_window_len)
 
-    def prepare_wbox(self):
-        # Precache
-        self._wbox
+        self._wbox = None
 
-    @cached_property
-    def _wbox(self):
+    def __enter__(self):
+        self._wbox = self._create_wbox()
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        # FIXME cache wbox or free resources
+        self._wbox = None
+
+    def _create_wbox(self):
         from .wavelet.cuda_backend import WaveletBox
 
         return WaveletBox(
@@ -42,6 +48,10 @@ class Composition(object):
         return self.get_complex_image(chunks, decimate=self.decimate)
 
     def get_complex_image(self, chunks, decimate):
+        if not self._wbox:
+            raise RuntimeError('You need to use {} in a with block'.
+                               format(self.__class__.__name__))
+
         return self._wbox.apply_cwt(chunks, decimate=decimate)
 
     def get_image(self, norma_window_len=None):

@@ -50,7 +50,7 @@ class CompositionCanceled(Exception):
 class QCompositionWorker(QThreadedWorker):
     def __init__(self, progress_dialog):
         super().__init__()
-        self.composition = None
+        self.busy = False
         self.progress_dialog = progress_dialog
         self.process.connect(self._process)
 
@@ -67,35 +67,26 @@ class QCompositionWorker(QThreadedWorker):
         log.debug('Before Image processed')
 
         # FIXME Implement jobs queue. Just cancel previous here
-        if self.composition:
-            self._message('Busi')
+        if self.busy:
             self.process_error.emit('Busi')
+
+            return
+
+        self.busy = True
 
         progressbar = partial(ProgressProxyToProgressDialog,
                               self.progress_dialog)
 
-        try:
-            self.composition = CompositionWithProgressbar(
-                progressbar,
-                chunks_provider,
-                scale_resolution=1/72,
-                omega0=70,
-                decimation_factor=7
-            )
-
-        except Exception:
-            log.exception('Composition create error')
-            self.process_error.emit('Composition create error')
-
-            return
-
-        self._message('Prepare composition Wavelet Box')
-        # FIXME implement some sontextmanager on composition.wbox
-        self.composition.prepare_wbox()
-        self._message('Analyse')
+        self._message('Prepare composition')
 
         try:
-            spectrogram = self.composition.get_spectrogram()
+            with CompositionWithProgressbar(
+                progressbar, chunks_provider,
+                scale_resolution=1/72, omega0=70, decimation_factor=7
+            ) as composition:
+
+                self._message('Analyse')
+                spectrogram = composition.get_spectrogram()
 
         except CompositionCanceled:
             log.debug('Composition canceled')
@@ -104,7 +95,7 @@ class QCompositionWorker(QThreadedWorker):
             return
 
         finally:
-            self.composition = None
+            self.busy = False
 
         log.debug('Image processed')
 
