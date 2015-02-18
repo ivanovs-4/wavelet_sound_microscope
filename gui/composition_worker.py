@@ -11,7 +11,6 @@ from analyze.media.sound import ChunksProvider
 from utils import ProgressProxy
 
 
-
 log = logging.getLogger(__name__)
 
 

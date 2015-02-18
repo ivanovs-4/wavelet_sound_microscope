@@ -62,6 +62,12 @@ class Spectrogram(object):
         self.image = image
         self.src = src
 
+    def x2time(self, x):
+        raise NotImplemented
+
+    def y2freq(self, y):
+        raise NotImplemented
+
 
 class CompositionWithProgressbar(Composition):
     def __init__(self, progressbar, *args, **kwargs):

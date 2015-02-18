@@ -44,6 +44,9 @@ class MainWindow(QMainWindow):
         self.fname = None
 
         self.spectrogram_view = SpectrogramQGraphicsView()
+        self.spectrogram_view.fragment_selected.connect(
+            self.on_sound_fragment_selected
+        )
         self.spectrogram_view.setMinimumSize(200, 200)
         self.setCentralWidget(self.spectrogram_view)
 
@@ -79,6 +82,12 @@ class MainWindow(QMainWindow):
         self.restoreState(settings.value('MainWindow/State', ''))
 
         QTimer.singleShot(0, self.load_initial_file)
+
+    def on_sound_fragment_selected(self, fragment):
+        # FIXME play sound
+        self.status_show(
+            'Time: %r Freq: %r' % (fragment.time, fragment.frequency)
+        )
 
     def file_open(self):
         if not self.ok_to_continue:

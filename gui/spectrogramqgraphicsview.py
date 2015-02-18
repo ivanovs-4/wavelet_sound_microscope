@@ -1,10 +1,17 @@
 import logging
 
-from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtCore import pyqtSignal, Qt, QRectF
 from PyQt5.QtGui import QPainter, QPixmap, QImage
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QRubberBand
 
+
 log = logging.getLogger(__name__)
+
+
+class SoundFragment(object):
+    def __init__(self, time, frequency):
+        self.time = time
+        self.frequency = frequency
 
 
 class SpectrogramQGraphicsView(QGraphicsView):
@@ -25,6 +32,8 @@ class SpectrogramQGraphicsView(QGraphicsView):
         # self.setMouseTracking(True)
 
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
+
+    fragment_selected = pyqtSignal(SoundFragment)
 
     def update_spectrogram(self, spectrogram):
         self.spectrogram = spectrogram
@@ -51,6 +60,23 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         self.scene.reset()
         self.scene.addPixmap(QPixmap.fromImage(image))
+
+    def selected_rect_in_scene(self, rect):
+        # Debug
+        center = rect.center()
+        self.fitInView(rect, Qt.KeepAspectRatio)
+
+        time = (
+            self.spectrogram.x2time(rect.left()),
+            self.spectrogram.x2time(rect.right()),
+        )
+
+        frequency = (
+            self.spectrogram.y2freq(rect.bottom()),
+            self.spectrogram.y2freq(rect.top()),
+        )
+
+        self.fragment_selected.emit(SoundFragment(time, frequency))
 
     def mousePressEvent(self, event):
         log.debug('mousePressEvent %r', event)
@@ -90,15 +116,15 @@ class SpectrogramQGraphicsView(QGraphicsView):
 # {
 #    if (event.button() == Qt::MiddleButton){
 #         QGraphicsView * view = static_cast<QGraphicsView *>(this)
-        view = self
 
         rubberBandEnd = event.pos()
-        zoomRectInScene = QRectF(
-            view.mapToScene(self.rubberBandOrigin),
-            view.mapToScene(rubberBandEnd)
+
+        selectedRectInScene = QRectF(
+            self.mapToScene(self.rubberBandOrigin),
+            self.mapToScene(rubberBandEnd)
         )
-        center = zoomRectInScene.center()
-        view.fitInView(zoomRectInScene, Qt.KeepAspectRatio)
+        self.selected_rect_in_scene(selectedRectInScene)
+
         self.rubberBandActive = False
         # log.debug('rubberBand %r', dir(self.rubberBand))
         self.rubberBand.hide()
