@@ -22,10 +22,11 @@ class Composition(object):
         log.debug('Norma window len: %s', self.norma_window_len)
 
     def prepare_wbox(self):
-        return self.wbox
+        # Precache
+        self._wbox
 
     @cached_property
-    def wbox(self):
+    def _wbox(self):
         from .wavelet.cuda_backend import WaveletBox
 
         return WaveletBox(
@@ -41,7 +42,7 @@ class Composition(object):
         return self.get_complex_image(chunks, decimate=self.decimate)
 
     def get_complex_image(self, chunks, decimate):
-        return self.wbox.apply_cwt(chunks, decimate=decimate)
+        return self._wbox.apply_cwt(chunks, decimate=decimate)
 
     def get_image(self, norma_window_len=None):
         abs_image = np.abs(self.complex_image)
