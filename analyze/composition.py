@@ -51,6 +51,15 @@ class Composition(object):
 
         return toimage(apply_colormap(abs_image))
 
+    def get_spectrogram(self, norma_window_len=None):
+        image = self.get_image(norma_window_len)
+        return Spectrogram(image)
+
+
+class Spectrogram(object):
+    def __init__(self, image):
+        self.image = image
+
 
 class CompositionWithProgressbar(Composition):
     def __init__(self, progressbar, *args, **kwargs):

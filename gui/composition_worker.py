@@ -6,7 +6,7 @@ from PIL.Image import Image
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
 from .threading import QThreadedWorkerDebug as QThreadedWorker
-from analyze.composition import CompositionWithProgressbar
+from analyze.composition import CompositionWithProgressbar, Spectrogram
 from analyze.media.sound import ChunksProviderFromSoundFile
 from utils import ProgressProxy
 
@@ -62,7 +62,7 @@ class QCompositionWorker(QThreadedWorker):
     load_file_error = pyqtSignal()
 
     process = pyqtSignal()
-    process_ok = pyqtSignal(Image)
+    process_ok = pyqtSignal(Spectrogram)
     process_error = pyqtSignal()
 
     message = pyqtSignal(str)
@@ -117,7 +117,7 @@ class QCompositionWorker(QThreadedWorker):
         self._message('Analyse')
 
         try:
-            image = self.composition.get_image()
+            spectrogram = self.composition.get_spectrogram()
 
         except CompositionCanceled:
             log.debug('Composition canceled')
@@ -127,7 +127,8 @@ class QCompositionWorker(QThreadedWorker):
             return
 
         log.debug('Image processed')
-        self.process_ok.emit(image)
+
+        self.process_ok.emit(spectrogram)
         self._message('Done')
 
     def _message(self, msg):

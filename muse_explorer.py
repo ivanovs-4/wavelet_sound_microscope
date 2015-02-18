@@ -40,9 +40,9 @@ class MainWindow(QMainWindow):
 
         self.fname = None
 
-        self.spectrogram = SpectrogramQGraphicsView()
-        self.spectrogram.setMinimumSize(200, 200)
-        self.setCentralWidget(self.spectrogram)
+        self.spectrogram_view = SpectrogramQGraphicsView()
+        self.spectrogram_view.setMinimumSize(200, 200)
+        self.setCentralWidget(self.spectrogram_view)
 
         status = self.statusBar()
         status.setSizeGripEnabled(False)
@@ -110,9 +110,9 @@ class MainWindow(QMainWindow):
         # When file loaded immediately start process it
         self.composition_worker.process.emit()
 
-    def update_spectrogram(self, image):
-        log.debug('Run update_spectrogram %s', image)
-        self.spectrogram.show_image(image)
+    def update_spectrogram(self, spectrogram):
+        log.debug('Run update_spectrogram %s', spectrogram)
+        self.spectrogram_view.show_image(spectrogram.image)
 
     def load_initial_file(self):
         settings = QSettings()
