@@ -37,8 +37,9 @@ class MainWindow(QMainWindow):
         self.composition_worker.process_ok.connect(
             self.on_composition_processed
         )
-        # Just show process error on status line
-        self.composition_worker.process_error.connect(self.status_show)
+        self.composition_worker.process_error.connect(
+            self.on_composition_process_error
+        )
 
         self.fname = None
 
@@ -84,7 +85,8 @@ class MainWindow(QMainWindow):
             return
 
         path = (os.path.dirname(self.fname)
-               if self.fname is not None else '.')
+                if self.fname is not None
+                else '.')
         formats = ['*.wav', '*.flac']
 
         fname, fmts = QFileDialog.getOpenFileName(
@@ -99,23 +101,25 @@ class MainWindow(QMainWindow):
 
     def load_file(self, fname):
         log.debug('MainWindow.load_file: %s', fname)
-        self.fname = fname
 
         if not self.ok_to_continue:
             log.debug('Not self.ok_to_continue')
 
             return
 
+        self.fname = None
+        self.spectrogram_view.reset()
+
         try:
             chunks_provider = ChunksProviderFromSoundFile(fname)
 
         except Exception as e:
-            log.exception('Load file error')
+            log.exception('Load file error %s', e)
             self.status_show(repr(e))
-            self.fname = None
 
             return
 
+        self.fname = fname
         log.debug('Loadaed %s', os.path.basename(fname))
         self.status_show('Loadaed {0}'.format(os.path.basename(fname)))
 
@@ -126,6 +130,10 @@ class MainWindow(QMainWindow):
         log.debug('Run update_spectrogram %s', spectrogram)
         self.status_show('Processed')
         self.spectrogram_view.update_spectrogram(spectrogram)
+
+    def on_composition_process_error(self, msg):
+        self.fname = None
+        self.status_show(msg)
 
     def load_initial_file(self):
         settings = QSettings()

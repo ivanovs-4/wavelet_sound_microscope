@@ -20,14 +20,23 @@ class SpectrogramQGraphicsView(QGraphicsView):
         # self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
 
         # self.setDragMode(QGraphicsView.RubberBandDrag)
-        self.setDragMode(QGraphicsView.ScrollHandDrag)
+        # self.setDragMode(QGraphicsView.ScrollHandDrag)
 
         # self.setMouseTracking(True)
 
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
     def update_spectrogram(self, spectrogram):
+        self.spectrogram = spectrogram
         self.show_image(spectrogram.image)
+
+    def reset(self):
+        self.spectrogram = None
+        self.scene.clear()
+
+        # FIXME Create some abstract tool for mouse events handling
+        self.rubberBandActive = False
+        self.rubberBand.hide()
 
     def show_image(self, im):
         if im.mode != 'RGB':
@@ -40,7 +49,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
         im.save('/tmp/spectrogram.png')
         image = QImage('/tmp/spectrogram.png')
 
-        self.scene.clear()
+        self.scene.reset()
         self.scene.addPixmap(QPixmap.fromImage(image))
 
     def mousePressEvent(self, event):
