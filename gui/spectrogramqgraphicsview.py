@@ -12,7 +12,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
         self.scene = QGraphicsScene()
         # scene.setItemIndexMethod(QGraphicsScene.NoIndex)
 
-        super(SpectrogramQGraphicsView, self).__init__(self.scene)
+        super().__init__(self.scene)
 
         self.setRenderHint(QPainter.Antialiasing)
 
