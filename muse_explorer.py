@@ -33,10 +33,11 @@ class MainWindow(QMainWindow):
 
         self.composition_worker = QCompositionWorker(self.progress_dialog)
 
-        self.composition_worker.message.connect(self.update_status)
-        self.composition_worker.load_file_ok.connect(self.on_file_loaded)
-        self.composition_worker.load_file_error.connect(self.stop_loading)
-        self.composition_worker.process_ok.connect(self.update_spectrogram)
+        cw = self.composition_worker
+        cw.message.connect(self.update_status)
+        cw.load_file_ok.connect(self.on_file_loaded)
+        cw.load_file_error.connect(self.stop_loading)
+        cw.process_ok.connect(self.on_composition_processed)
 
         self.fname = None
 
@@ -110,7 +111,7 @@ class MainWindow(QMainWindow):
         # When file loaded immediately start process it
         self.composition_worker.process.emit()
 
-    def update_spectrogram(self, spectrogram):
+    def on_composition_processed(self, spectrogram):
         log.debug('Run update_spectrogram %s', spectrogram)
         self.spectrogram_view.update_spectrogram(spectrogram)
 
