@@ -26,6 +26,9 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
+    def update_spectrogram(self, spectrogram):
+        self.show_image(spectrogram.image)
+
     def show_image(self, im):
         if im.mode != 'RGB':
             im = im.convert('RGB')

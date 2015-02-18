@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
 
     def update_spectrogram(self, spectrogram):
         log.debug('Run update_spectrogram %s', spectrogram)
-        self.spectrogram_view.show_image(spectrogram.image)
+        self.spectrogram_view.update_spectrogram(spectrogram)
 
     def load_initial_file(self):
         settings = QSettings()
