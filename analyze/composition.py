@@ -53,12 +53,14 @@ class Composition(object):
 
     def get_spectrogram(self, norma_window_len=None):
         image = self.get_image(norma_window_len)
-        return Spectrogram(image)
+
+        return Spectrogram(image, self.chunks_provider)
 
 
 class Spectrogram(object):
-    def __init__(self, image):
+    def __init__(self, image, src):
         self.image = image
+        self.src = src
 
 
 class CompositionWithProgressbar(Composition):
