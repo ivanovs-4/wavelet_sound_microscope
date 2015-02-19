@@ -58,7 +58,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
         im.save('/tmp/spectrogram.png')
         image = QImage('/tmp/spectrogram.png')
 
-        self.scene.reset()
+        self.scene.clear()
         self.scene.addPixmap(QPixmap.fromImage(image))
 
     def selected_rect_in_scene(self, rect):
