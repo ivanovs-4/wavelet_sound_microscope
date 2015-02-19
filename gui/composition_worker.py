@@ -7,7 +7,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
 from .threading import QThreadedWorkerDebug as QThreadedWorker
 from analyze.composition import CompositionWithProgressbar, Spectrogram
-from analyze.media.sound import ChunksProvider
+from analyze.media.sound import Sound
 from utils import ProgressProxy
 
 
@@ -54,7 +54,7 @@ class QCompositionWorker(QThreadedWorker):
         self.progress_dialog = progress_dialog
         self.process.connect(self._process)
 
-    process = pyqtSignal(ChunksProvider)
+    process = pyqtSignal(Sound)
     process_ok = pyqtSignal(Spectrogram)
     process_error = pyqtSignal(str)
 
@@ -63,7 +63,7 @@ class QCompositionWorker(QThreadedWorker):
     def set_progress_value(self, val):
         self._message('Progress value: {}'.format(val))
 
-    def _process(self, chunks_provider):
+    def _process(self, sound):
         log.debug('Before Image processed')
 
         # FIXME Implement jobs queue. Just cancel previous here
@@ -81,7 +81,7 @@ class QCompositionWorker(QThreadedWorker):
 
         try:
             with CompositionWithProgressbar(
-                progressbar, chunks_provider,
+                progressbar, sound,
                 scale_resolution=1/72, omega0=70, decimation_factor=7
             ) as composition:
 

@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QProgressDialog,
 )
 
-from analyze.media.sound import ChunksProviderFromSoundFile
+from analyze.media.sound import SoundFromSoundFile
 from gui.composition_worker import QCompositionWorker
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
         self.spectrogram_view.reset()
 
         try:
-            chunks_provider = ChunksProviderFromSoundFile(fname)
+            sound = SoundFromSoundFile(fname)
 
         except Exception as e:
             log.exception('Load file error %s', e)
@@ -134,7 +134,7 @@ class MainWindow(QMainWindow):
         self.status_show('Loadaed {0}'.format(os.path.basename(fname)))
 
         # When file loaded immediately start process it
-        self.composition_worker.process.emit(chunks_provider)
+        self.composition_worker.process.emit(sound)
 
     def on_composition_processed(self, spectrogram):
         log.debug('Run update_spectrogram %s', spectrogram)

@@ -10,12 +10,11 @@ from utils import IterableWithLength
 log = logging.getLogger(__name__)
 
 
-# FIXME make class Sound from this
-class ChunksProvider(object):
+class Sound(object):
     pass
 
 
-class ChunksProviderFromSoundFile(ChunksProvider):
+class SoundFromSoundFile(Sound):
     def __init__(self, filename):
         self.filename = filename
         self.sound_file = SoundFile(self.filename)

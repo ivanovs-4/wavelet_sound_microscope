@@ -7,7 +7,7 @@ from functools import partial
 import click
 
 from analyze.composition import (
-    ChunksProviderFromSoundFile, CompositionWithProgressbar
+    SoundFromSoundFile, CompositionWithProgressbar
 )
 
 
@@ -41,7 +41,7 @@ def main(source_sound_file, destination_image_file, norma_window_len, verbose):
     with statusbar('Prepare Wavelet Box'):
         with CompositionWithProgressbar(
             progressbar,
-            ChunksProviderFromSoundFile(source_sound_file)
+            SoundFromSoundFile(source_sound_file)
         ) as composition:
             img = composition.get_image(norma_window_len=norma_window_len)
 

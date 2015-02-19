@@ -11,15 +11,15 @@ log = logging.getLogger(__name__)
 
 
 class Composition(object):
-    def __init__(self, chunks_provider,
+    def __init__(self, sound,
                  scale_resolution=1/36, omega0=70, decimation_factor=9):
-        self.chunks_provider = chunks_provider
+        self.sound = sound
         self.scale_resolution = scale_resolution
         self.omega0 = omega0
 
         # Calculate chunk_size
         # samplerate = sound.samples / sound.duration
-        samplerate = chunks_provider.samplerate
+        samplerate = sound.samplerate
         self.chunk_size = 2 ** (
             1 + int(np.log2(samplerate - 1))
         )
@@ -49,7 +49,7 @@ class Composition(object):
 
     @cached_property
     def complex_image(self):
-        chunks = self.chunks_provider.get_chunks(self.chunk_size)
+        chunks = self.sound.get_chunks(self.chunk_size)
 
         return self.get_complex_image(chunks)
 
@@ -72,7 +72,7 @@ class Composition(object):
     def get_spectrogram(self, norma_window_len=None):
         image = self.get_image(norma_window_len)
 
-        return Spectrogram(image, self.chunks_provider)
+        return Spectrogram(image, self.sound)
 
 
 class Spectrogram(object):
