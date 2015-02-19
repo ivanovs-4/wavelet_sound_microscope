@@ -74,9 +74,11 @@ class Spectrogram(object):
         self.src = src
 
     def x2time(self, x):
+        return x
         raise NotImplemented
 
     def y2freq(self, y):
+        return y
         raise NotImplemented
 
 

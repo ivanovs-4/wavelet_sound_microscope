@@ -10,8 +10,8 @@ log = logging.getLogger(__name__)
 
 class SoundFragment(object):
     def __init__(self, time, frequency):
-        self.time = time
-        self.frequency = frequency
+        self.time = tuple(sorted(time))
+        self.frequency = tuple(sorted(frequency))
 
 
 class SpectrogramQGraphicsView(QGraphicsView):
@@ -64,7 +64,8 @@ class SpectrogramQGraphicsView(QGraphicsView):
     def selected_rect_in_scene(self, rect):
         # Debug
         center = rect.center()
-        self.fitInView(rect, Qt.KeepAspectRatio)
+        self.fitInView(rect, Qt.IgnoreAspectRatio)
+        # self.fitInView(rect, Qt.KeepAspectRatio)
 
         time = (
             self.spectrogram.x2time(rect.left()),
