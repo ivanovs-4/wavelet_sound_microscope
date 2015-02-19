@@ -16,7 +16,15 @@ class Composition(object):
         self.chunks_provider = chunks_provider
         self.scale_resolution = scale_resolution
         self.omega0 = omega0
-        self.decimate = self.chunks_provider.chunk_size // 2 ** decimation_factor
+
+        # Calculate chunk_size
+        # samplerate = sound.samples / sound.duration
+        samplerate = chunks_provider.samplerate
+        self.chunk_size = 2 ** (
+            1 + int(np.log2(samplerate - 1))
+        )
+
+        self.decimate = self.chunk_size // 2 ** decimation_factor
 
         self.norma_window_len = 501
         log.debug('Norma window len: %s', self.norma_window_len)
@@ -36,7 +44,7 @@ class Composition(object):
         from .wavelet.cuda_backend import WaveletBox
 
         return WaveletBox(
-            self.chunks_provider.chunk_size,
+            self.chunk_size,
             time_step=1,
             scale_resolution=self.scale_resolution,
             omega0=self.omega0
@@ -44,15 +52,16 @@ class Composition(object):
 
     @cached_property
     def complex_image(self):
-        chunks = self.chunks_provider.get_chunks()
-        return self.get_complex_image(chunks, decimate=self.decimate)
+        chunks = self.chunks_provider.get_chunks(self.chunk_size)
 
-    def get_complex_image(self, chunks, decimate):
+        return self.get_complex_image(chunks)
+
+    def get_complex_image(self, chunks):
         if not self._wbox:
             raise RuntimeError('You need to use {} in a with block'.
                                format(self.__class__.__name__))
 
-        return self._wbox.apply_cwt(chunks, decimate=decimate)
+        return self._wbox.apply_cwt(chunks, decimate=self.decimate)
 
     def get_image(self, norma_window_len=None):
         abs_image = np.abs(self.complex_image)
@@ -60,6 +69,7 @@ class Composition(object):
         if norma_window_len:
             nolmalize_horizontal_smooth(abs_image, norma_window_len)
 
+        # FIXME move apply_colormap to Spectrogram
         return toimage(apply_colormap(abs_image))
 
     def get_spectrogram(self, norma_window_len=None):
