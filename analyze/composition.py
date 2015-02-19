@@ -32,23 +32,20 @@ class Composition(object):
         self._wbox = None
 
     def __enter__(self):
-        self._wbox = self._create_wbox()
+        from .wavelet.cuda_backend import WaveletBox
+
+        self._wbox = WaveletBox(
+            self.chunk_size,
+            time_step=1,
+            scale_resolution=self.scale_resolution,
+            omega0=self.omega0
+        )
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
         # FIXME cache wbox or free resources
         self._wbox = None
-
-    def _create_wbox(self):
-        from .wavelet.cuda_backend import WaveletBox
-
-        return WaveletBox(
-            self.chunk_size,
-            time_step=1,
-            scale_resolution=self.scale_resolution,
-            omega0=self.omega0
-        )
 
     @cached_property
     def complex_image(self):
