@@ -72,21 +72,29 @@ class Composition(object):
     def get_spectrogram(self, norma_window_len=None):
         image = self.get_image(norma_window_len)
 
-        return Spectrogram(image, self.sound)
+        return Spectrogram(
+            image=image,
+            src=self.sound,
+            frequencies=self._wbox.angular_frequencies[:]
+        )
 
 
 class Spectrogram(object):
-    def __init__(self, image, src):
+    def __init__(self, image, src, frequencies):
         self.image = image
+        self.width, self.height = self.image.size
         self.src = src
+        self.frequencies = frequencies
 
     def x2time(self, x):
-        return x
-        raise NotImplemented
+        return x * self.src.duration / self.width
 
     def y2freq(self, y):
-        return y
-        raise NotImplemented
+        return np.interp(
+            [y],
+            np.linspace(0, self.height - 1, len(self.frequencies)),
+            self.frequencies
+        )[0]
 
 
 class CompositionWithProgressbar(Composition):

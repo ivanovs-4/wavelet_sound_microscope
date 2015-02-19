@@ -19,6 +19,8 @@ class SoundFromSoundFile(Sound):
         self.filename = filename
         self.sound_file = SoundFile(self.filename)
         self.samplerate = self.sound_file.samplerate
+        self.size = len(self.sound_file)
+        self.duration = self.samplerate / self.size
 
     def get_chunks(self, chunk_size):
         # self.chunks_count = (sound_file.frames - 1) // (chunk_size // 2) + 1

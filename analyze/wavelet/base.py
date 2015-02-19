@@ -115,7 +115,7 @@ def autoscales(nsamples, time_step, scale_resolution, omega0):
     s0 = (time_step * (omega0 + np.sqrt(2 + omega0 ** 2))) / PI2
 
     J = int(np.floor(scale_resolution ** -1 *
-                        np.log2((nsamples * time_step) / s0)))
+                     np.log2((nsamples * time_step) / s0)))
 
     return np.fromiter(
         (s0 * 2 ** (i * scale_resolution) for i in range(J + 1)),
