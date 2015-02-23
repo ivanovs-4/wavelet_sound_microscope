@@ -14,6 +14,8 @@ from analyze.media.sound import SoundFromSoundFile, SoundResampled
 from gui.composition_worker import QCompositionWorker
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
+from utils import round_significant
+
 
 __version__ = '1.0.0'
 
@@ -88,9 +90,16 @@ class MainWindow(QMainWindow):
 
     def on_sound_fragment_selected(self, fragment):
         # FIXME play sound
+        from_time, to_time = fragment.time
+        from_freq, to_freq = fragment.frequency
+
         self.status_show(
-            'Time: {} Freq: {}'.format(repr(fragment.time),
-                                       repr(fragment.frequency))
+            'Time: {}-{} seconds. Freq: {}-{} Hz.'.format(
+                round_significant(from_time, 3),
+                round_significant(to_time, 3),
+                round_significant(from_freq, 3),
+                round_significant(to_freq, 3),
+            )
         )
 
     def file_open(self):

@@ -76,25 +76,25 @@ class Composition(object):
         return Spectrogram(
             image=image,
             src=self.sound,
-            frequencies=self._wbox.angular_frequencies[:]
+            scales=self._wbox.scales[:]
         )
 
 
 class Spectrogram(object):
-    def __init__(self, image, src, frequencies):
+    def __init__(self, image, src, scales):
         self.image = image
         self.width, self.height = self.image.size
         self.src = src
-        self.frequencies = frequencies
+        self.scales = scales
 
     def x2time(self, x):
         return x * self.src.duration / self.width
 
     def y2freq(self, y):
         return np.interp(
-            [y],
-            np.linspace(0, self.height - 1, len(self.frequencies)),
-            self.frequencies
+            [self.height - y],
+            np.linspace(0, self.height - 1, len(self.scales)),
+            self.scales
         )[0]
 
 

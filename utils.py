@@ -1,4 +1,5 @@
 import collections
+import math
 
 
 class cached_property(object):
@@ -93,3 +94,7 @@ def _length_hint(obj):
            hint < 0:
             return None
         return hint
+
+
+def round_significant(value, count=1):
+    return round(value, count - 1 - math.floor(math.log10(value)))
