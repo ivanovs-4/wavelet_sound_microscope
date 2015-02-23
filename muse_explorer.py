@@ -24,7 +24,7 @@ logging.getLogger('').setLevel(logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
-SAMPLERATE = 1024 * 24
+SAMPLERATE = 1024 * 16
 
 
 class MainWindow(QMainWindow):
@@ -136,7 +136,6 @@ class MainWindow(QMainWindow):
         log.debug('Loadaed %s', os.path.basename(fname))
         self.status_show('Loadaed {0}'.format(os.path.basename(fname)))
 
-        # When file loaded immediately start process it
         sound_resampled = SoundResampled(sound, SAMPLERATE)
         self.composition_worker.process.emit(sound_resampled)
 

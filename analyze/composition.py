@@ -20,11 +20,12 @@ class Composition(object):
         # Calculate chunk_size
         # samplerate = sound.samples / sound.duration
         samplerate = sound.samplerate
-        self.chunk_size = 2 ** (
+        self.fragment_size = 2 ** (
             1 + int(np.log2(samplerate - 1))
         )
+        self.chunk_size = self.fragment_size // 2
 
-        self.decimate = self.chunk_size // 2 ** decimation_factor
+        self.decimate = self.fragment_size // 2 ** decimation_factor
 
         self.norma_window_len = 501
         log.debug('Norma window len: %s', self.norma_window_len)
@@ -35,7 +36,7 @@ class Composition(object):
         from .wavelet.cuda_backend import WaveletBox
 
         self._wbox = WaveletBox(
-            self.chunk_size,
+            self.fragment_size,
             time_step=1,
             scale_resolution=self.scale_resolution,
             omega0=self.omega0
@@ -102,6 +103,6 @@ class CompositionWithProgressbar(Composition):
         self.progressbar = progressbar
         super().__init__(*args, **kwargs)
 
-    def get_complex_image(self, chunks, decimate):
+    def get_complex_image(self, chunks):
         with self.progressbar(chunks) as chunks_:
-            return super().get_complex_image(chunks_, decimate)
+            return super().get_complex_image(chunks_)
