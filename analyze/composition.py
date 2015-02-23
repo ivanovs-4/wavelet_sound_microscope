@@ -1,3 +1,4 @@
+import bisect
 import logging
 
 import numpy as np
@@ -83,6 +84,9 @@ class Spectrogram(object):
             np.linspace(0, self.height - 1, len(self.scales)),
             self.scales
         )[0]
+
+    def freq2y(self, f):
+        return self.height - bisect.bisect_left(self.scales, f)
 
 
 class CompositionWithProgressbar(Composition):

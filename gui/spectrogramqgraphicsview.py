@@ -1,7 +1,8 @@
 import logging
 
-from PyQt5.QtCore import pyqtSignal, Qt, QRectF
-from PyQt5.QtGui import QPainter, QPixmap, QImage
+import numpy as np
+from PyQt5.QtCore import pyqtSignal, Qt, QPointF, QRectF
+from PyQt5.QtGui import QPainter, QPixmap, QImage, QBrush, QColor
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QRubberBand
 
 
@@ -16,6 +17,7 @@ class SoundFragment(object):
 
 class SpectrogramQGraphicsView(QGraphicsView):
     def __init__(self):
+        self.spectrogram = None
         self.scene = QGraphicsScene()
         # scene.setItemIndexMethod(QGraphicsScene.NoIndex)
 
@@ -62,10 +64,26 @@ class SpectrogramQGraphicsView(QGraphicsView):
         self.scene.addPixmap(QPixmap.fromImage(image))
 
     def selected_rect_in_scene(self, rect):
-        # Debug
-        center = rect.center()
-        # self.fitInView(rect, Qt.IgnoreAspectRatio)
-        # self.fitInView(rect, Qt.KeepAspectRatio)
+        if not self.spectrogram:
+            return
+
+        loudest_pos = self.where_loudest_in_rect(rect)
+
+        el = self.scene.addEllipse(QRectF(-7, -7, 7, 7), brush=QBrush(QColor(255, 0, 0)))
+        el.setPos(loudest_pos)
+
+        # Harmonics show prototype
+        for j in range(12):
+            f = self.spectrogram.y2freq(loudest_pos.y())
+            y2 = self.spectrogram.freq2y(f * (j + 2))
+            el = self.scene.addEllipse(QRectF(-5, -5, 5, 5), brush=QBrush(QColor(255, 0, 0)))
+            el.setPos(QPointF(loudest_pos.x(), y2))
+
+        for j in range(12):
+            f = self.spectrogram.y2freq(loudest_pos.y())
+            y2 = self.spectrogram.freq2y(f / (j + 2))
+            el = self.scene.addEllipse(QRectF(-5, -5, 5, 5), brush=QBrush(QColor(255, 255, 0)))
+            el.setPos(QPointF(loudest_pos.x(), y2))
 
         time = (
             self.spectrogram.x2time(rect.left()),
@@ -79,10 +97,23 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         self.fragment_selected.emit(SoundFragment(time, frequency))
 
+    def where_loudest_in_rect(self, rect):
+        x1 = rect.left()
+        x2 = rect.right()
+        y1 = rect.top()
+        y2 = rect.bottom()
+
+        abs_rect = self.spectrogram.abs_image[y1-1:y2, x1-1:x2]
+
+        peak_index = np.unravel_index(abs_rect.argmax(), abs_rect.shape)
+        y, x = peak_index
+
+        return QPointF(x1 + x, y1 + y + 1)
+
     def mousePressEvent(self, event):
         log.debug('mousePressEvent %r', event)
 
-        self.rubberBand.hide()
+        # self.rubberBand.hide()
 
 #     if (event.button() == Qt::MiddleButton) {
         self.rubberBandOrigin = event.pos()
@@ -130,7 +161,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         self.rubberBandActive = False
         # log.debug('rubberBand %r', dir(self.rubberBand))
-        # self.rubberBand.hide()
+        self.rubberBand.hide()
 #         delete rubberBand
 #     }
 #     else{
