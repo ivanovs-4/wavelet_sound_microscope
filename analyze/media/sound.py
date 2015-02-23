@@ -56,6 +56,13 @@ class SoundResampled(Sound):
         self.samples = scipy.signal.resample(original.samples, self.size)
         self.duration = original.duration
 
+        # debug
+        cut_duration = 40
+        if self.duration > cut_duration:
+            self.size = cut_duration * self.samplerate
+            self.samples = self.samples[:self.size]
+            self.duration = self.size / self.samplerate
+
     def get_chunks(self, chunk_size):
         iter_samples = iter(self.samples)
         ichunks = map(lambda _: list(it.islice(iter_samples, chunk_size)),

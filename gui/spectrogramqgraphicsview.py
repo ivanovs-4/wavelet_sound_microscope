@@ -64,7 +64,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
     def selected_rect_in_scene(self, rect):
         # Debug
         center = rect.center()
-        self.fitInView(rect, Qt.IgnoreAspectRatio)
+        # self.fitInView(rect, Qt.IgnoreAspectRatio)
         # self.fitInView(rect, Qt.KeepAspectRatio)
 
         time = (
@@ -81,6 +81,8 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
     def mousePressEvent(self, event):
         log.debug('mousePressEvent %r', event)
+
+        self.rubberBand.hide()
 
 #     if (event.button() == Qt::MiddleButton) {
         self.rubberBandOrigin = event.pos()
@@ -128,7 +130,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         self.rubberBandActive = False
         # log.debug('rubberBand %r', dir(self.rubberBand))
-        self.rubberBand.hide()
+        # self.rubberBand.hide()
 #         delete rubberBand
 #     }
 #     else{
