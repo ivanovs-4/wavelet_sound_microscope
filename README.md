@@ -12,6 +12,5 @@ On Geforce GT 630 it is about 3 x realtime.
   - Fix PyCUDA ERROR: The context stack was not empty upon module cleanup.
 * Long cache composition results
 * Use smooth horizontal normalization
-* Spectrogram area selection
 * Zoom and play selected area
 * Debian package
