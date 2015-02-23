@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from scipy.misc import toimage
 
-from .media import apply_colormap, nolmalize_horizontal_smooth
+from .media import apply_colormap
 from utils import cached_property
 
 
@@ -26,9 +26,6 @@ class Composition(object):
         self.chunk_size = self.fragment_size // 2
 
         self.decimate = self.fragment_size // 2 ** decimation_factor
-
-        self.norma_window_len = 501
-        log.debug('Norma window len: %s', self.norma_window_len)
 
         self._wbox = None
 
@@ -61,28 +58,18 @@ class Composition(object):
 
         return self._wbox.apply_cwt(chunks, decimate=self.decimate)
 
-    def get_image(self, norma_window_len=None):
-        abs_image = np.abs(self.complex_image)
-
-        if norma_window_len:
-            nolmalize_horizontal_smooth(abs_image, norma_window_len)
-
-        # FIXME move apply_colormap to Spectrogram
-        return toimage(apply_colormap(abs_image))
-
-    def get_spectrogram(self, norma_window_len=None):
-        image = self.get_image(norma_window_len)
-
+    def get_spectrogram(self):
         return Spectrogram(
-            image=image,
+            abs_image=np.abs(self.complex_image),
             src=self.sound,
             scales=self._wbox.scales[:]
         )
 
 
 class Spectrogram(object):
-    def __init__(self, image, src, scales):
-        self.image = image
+    def __init__(self, abs_image, src, scales):
+        self.abs_image = abs_image
+        self.image = toimage(apply_colormap(self.abs_image))
         self.width, self.height = self.image.size
         self.src = src
         self.scales = scales
