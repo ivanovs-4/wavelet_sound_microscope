@@ -27,7 +27,10 @@ class SoundFromSoundFile(Sound):
             self.samplerate = sound_file.samplerate
             self.size = len(sound_file)
 
-        self.duration = self.samplerate / self.size
+        self.duration = self.size / self.samplerate
+
+        log.debug('Soundfile samplerate: %r size: %r duration: %r',
+                  self.samplerate, self.size, self.duration)
 
     @property
     def samples(self):
