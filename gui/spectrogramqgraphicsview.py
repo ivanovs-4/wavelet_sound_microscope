@@ -88,8 +88,6 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         self.scene.set_selection(rect)
 
-        self.deal_with_harmonics(rect)
-
         fragment = self.spectrogram.get_sound_fragment(
             (rect.left(), rect.right()),
             (rect.bottom(), rect.top()),
@@ -97,8 +95,14 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         self.fragment_selected.emit(fragment)
 
-    def deal_with_harmonics(self, rect):
-        loudest_pos = self.where_loudest_in_rect(rect)
+    def deal_with_harmonics(self, pos):
+        scene_pos = self.mapToScene(pos)
+
+        closer_rect = QRectF(
+            QPointF(scene_pos.x() - 3, scene_pos.y() - 12),
+            QPointF(scene_pos.x() + 3, scene_pos.y() + 12),
+        )
+        loudest_pos = self.where_loudest_in_rect(closer_rect)
 
         sc = self.scene
         sc.reset_harmonics()
@@ -173,6 +177,8 @@ class SpectrogramQGraphicsView(QGraphicsView):
 #         }
 #     }
 # }
+        self.deal_with_harmonics(event.pos())
+
 
     def mouseReleaseEvent(self, event):
 # {
@@ -185,6 +191,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
             self.mapToScene(self.rubberBandOrigin),
             self.mapToScene(rubberBandEnd)
         )
+
         self.selected_rect_in_scene(selectedRectInScene)
 
         self.rubberBandActive = False
