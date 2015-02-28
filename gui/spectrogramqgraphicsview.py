@@ -17,6 +17,11 @@ class SpectrogramQGraphicsScene(QGraphicsScene):
         self.selection_rect_item = None
         self.harmonics_items = []
 
+    def clear(self):
+        super().clear()
+        self.selection_rect_item = None
+        self.harmonics_items = []
+
     def set_selection(self, rect):
         if self.selection_rect_item:
             self.removeItem(self.selection_rect_item)
