@@ -62,21 +62,30 @@ class Composition(object):
     def get_spectrogram(self):
         return Spectrogram(
             abs_image=np.abs(self.complex_image),
-            src=self.sound,
+            sound=self.sound,
             scales=self._wbox.scales[:]
         )
 
 
 class Spectrogram(object):
-    def __init__(self, abs_image, src, scales):
+    def __init__(self, abs_image, sound, scales):
         self.abs_image = abs_image
         self.image = toimage(apply_colormap(self.abs_image))
         self.width, self.height = self.image.size
-        self.src = src
+        self.sound = sound
         self.scales = scales
 
     def x2time(self, x):
-        return x * self.src.duration / self.width
+        """
+        Assume self.width and self.sound.size equal
+        """
+        return self.sound.x2time(x * self.sound.size / self.width)
+
+    def time2x(self, time):
+        """
+        Assume self.width and self.sound.size equal
+        """
+        return int(self.sound.time2x(time) * self.width / self.sound.size)
 
     def y2freq(self, y):
         return np.interp(
@@ -87,6 +96,12 @@ class Spectrogram(object):
 
     def freq2y(self, f):
         return self.height - bisect.bisect_left(self.scales, f)
+
+    def get_sound_fragment(self, x1x2, y1y2):
+        time_band = tuple(map(self.x2time, x1x2))
+        frequency_band = tuple(map(self.y2freq, y1y2))
+
+        return self.sound.get_fragment(time_band, frequency_band)
 
 
 class CompositionWithProgressbar(Composition):

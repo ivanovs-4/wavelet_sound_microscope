@@ -5,14 +5,10 @@ from PyQt5.QtCore import pyqtSignal, Qt, QPointF, QRectF
 from PyQt5.QtGui import QPainter, QPixmap, QImage, QBrush, QColor
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QRubberBand
 
+from analyze.media.sound import SoundFragment
+
 
 log = logging.getLogger(__name__)
-
-
-class SoundFragment(object):
-    def __init__(self, time, frequency):
-        self.time = tuple(sorted(time))
-        self.frequency = tuple(sorted(frequency))
 
 
 class SpectrogramQGraphicsView(QGraphicsView):
@@ -27,9 +23,6 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         # self.setCacheMode(QGraphicsView.CacheBackground)
         # self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
-
-        # self.setDragMode(QGraphicsView.RubberBandDrag)
-        # self.setDragMode(QGraphicsView.ScrollHandDrag)
 
         # self.setMouseTracking(True)
 
@@ -85,17 +78,12 @@ class SpectrogramQGraphicsView(QGraphicsView):
             el = self.scene.addEllipse(QRectF(-5, -5, 5, 5), brush=QBrush(QColor(255, 255, 0)))
             el.setPos(QPointF(loudest_pos.x(), y2))
 
-        time = (
-            self.spectrogram.x2time(rect.left()),
-            self.spectrogram.x2time(rect.right()),
+        fragment = self.spectrogram.get_sound_fragment(
+            (rect.left(), rect.right()),
+            (rect.bottom(), rect.top()),
         )
 
-        frequency = (
-            self.spectrogram.y2freq(rect.bottom()),
-            self.spectrogram.y2freq(rect.top()),
-        )
-
-        self.fragment_selected.emit(SoundFragment(time, frequency))
+        self.fragment_selected.emit(fragment)
 
     def where_loudest_in_rect(self, rect):
         x1 = rect.left()
@@ -169,8 +157,6 @@ class SpectrogramQGraphicsView(QGraphicsView):
 #     }
 # }
 
-
-
 # void MyGraphics::wheelEvent(QWheelEvent *event){
 #     if(event->delta() > 0){
 #         //Zoom in
@@ -179,47 +165,3 @@ class SpectrogramQGraphicsView(QGraphicsView):
 #         this->zoomOut();
 #     }
 # }
-# /*
-# void MyGraphics::mousePressEvent(QMouseEvent *event)
-# {
-#     if (event->button() == Qt::MiddleButton) {
-#         rubberBandOrigin = event->pos();
-#         rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
-#         rubberBand->setGeometry(event->x(),event->y(),0, 0);
-#         rubberBand->show();
-#         rubberBandActive = true;
-#     }
-#     if(event->button() == Qt::LeftButton){
-#         LastPanPoint = event->pos();
-#     }
-# }
-# void MyGraphics::mouseMoveEvent(QMouseEvent *event)
-# {
-#     if (event->buttons() == Qt::MiddleButton && rubberBandActive == true){
-#         rubberBand->resize( event->x()-rubberBandOrigin.x(), event->y()-rubberBandOrigin.y() );
-#     }
-#     else{
-#         if(!LastPanPoint.isNull()) {
-#             //Get how much we panned
-#             QGraphicsView * view = static_cast<QGraphicsView *>(this);
-#             QPointF delta = view->mapToScene(LastPanPoint) - view->mapToScene(event->pos());
-#             LastPanPoint = event->pos();
-#         }
-#     }
-# }
-# void MyGraphics::mouseReleaseEvent(QMouseEvent *event)
-# {
-#    if (event->button() == Qt::MiddleButton){
-#         QGraphicsView * view = static_cast<QGraphicsView *>(this);
-#         QPoint rubberBandEnd = event->pos();
-#         QRectF zoomRectInScene = QRectF(view->mapToScene(rubberBandOrigin), view->mapToScene(rubberBandEnd));
-#         QPointF center = zoomRectInScene.center();
-#         view->fitInView(zoomRectInScene, Qt::KeepAspectRatio);
-#         rubberBandActive =  false;
-#         delete rubberBand;
-#     }
-#     else{
-#         LastPanPoint = QPoint();
-#     }
-# }
-# */
