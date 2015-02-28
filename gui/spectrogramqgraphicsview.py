@@ -11,10 +11,36 @@ from analyze.media.sound import SoundFragment
 log = logging.getLogger(__name__)
 
 
+class SpectrogramQGraphicsScene(QGraphicsScene):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.selection_rect_item = None
+        self.harmonics_items = []
+
+    def set_selection(self, rect):
+        if self.selection_rect_item:
+            self.removeItem(self.selection_rect_item)
+
+        self.selection_rect_item = self.addRect(
+            rect, pen=QPen(QColor('#00FF00'))
+        )
+
+    def reset_harmonics(self):
+        for i in self.harmonics_items:
+            self.removeItem(i)
+
+        self.harmonics_items = []
+
+    def add_harmonic(self, pos, size, **kwargs):
+        el = self.addEllipse(QRectF(-size, -size, size, size), **kwargs)
+        el.setPos(pos)
+        self.harmonics_items.append(el)
+
+
 class SpectrogramQGraphicsView(QGraphicsView):
     def __init__(self):
         self.spectrogram = None
-        self.scene = QGraphicsScene()
+        self.scene = SpectrogramQGraphicsScene()
         # scene.setItemIndexMethod(QGraphicsScene.NoIndex)
 
         super().__init__(self.scene)
@@ -25,8 +51,6 @@ class SpectrogramQGraphicsView(QGraphicsView):
         # self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
 
         # self.setMouseTracking(True)
-
-        self.scene.selection_rect = None
 
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
@@ -62,30 +86,34 @@ class SpectrogramQGraphicsView(QGraphicsView):
         if not self.spectrogram:
             return
 
-        if self.scene.selection_rect:
-            self.scene.removeItem(self.scene.selection_rect)
-
-        self.scene.selection_rect = self.scene.addRect(
-            rect, pen=QPen(QColor('#00FF00'))
-        )
+        sc = self.scene
+        sc.set_selection(rect)
 
         loudest_pos = self.where_loudest_in_rect(rect)
 
-        el = self.scene.addEllipse(QRectF(-7, -7, 7, 7), brush=QBrush(QColor(255, 0, 0)))
-        el.setPos(loudest_pos)
+        sc.reset_harmonics()
+        sc.add_harmonic(loudest_pos, size=7, brush=QBrush(QColor(255, 0, 0)))
 
         # Harmonics show prototype
         for j in range(12):
             f = self.spectrogram.y2freq(loudest_pos.y())
             y2 = self.spectrogram.freq2y(f * (j + 2))
-            el = self.scene.addEllipse(QRectF(-5, -5, 5, 5), brush=QBrush(QColor(255, 0, 0)))
-            el.setPos(QPointF(loudest_pos.x(), y2))
+
+            sc.add_harmonic(
+                QPointF(loudest_pos.x(), y2),
+                size=4,
+                brush=QBrush(QColor(255, 0, 0))
+            )
 
         for j in range(12):
             f = self.spectrogram.y2freq(loudest_pos.y())
             y2 = self.spectrogram.freq2y(f / (j + 2))
-            el = self.scene.addEllipse(QRectF(-5, -5, 5, 5), brush=QBrush(QColor(255, 255, 0)))
-            el.setPos(QPointF(loudest_pos.x(), y2))
+
+            sc.add_harmonic(
+                QPointF(loudest_pos.x(), y2),
+                size=4,
+                brush=QBrush(QColor(255, 200, 0))
+            )
 
         fragment = self.spectrogram.get_sound_fragment(
             (rect.left(), rect.right()),
