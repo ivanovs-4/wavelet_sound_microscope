@@ -1,5 +1,6 @@
 import itertools as it
 import logging
+import subprocess as sub
 
 import numpy as np
 import scipy.signal
@@ -31,6 +32,13 @@ class Sound(object):
 
     def play(self):
         log.debug('Play %r', self)
+
+        # FIXME change adhoc play to universal
+        fragment_filename = '/tmp/fragment.wav'
+        sub.check_call(['rm', '-rf', fragment_filename])
+        sf.write(self.samples, fragment_filename, self.samplerate)
+        sub.check_call(['mplayer', '-ao', 'alsa:noblock:device=hw=Set',
+                        fragment_filename])
 
     def get_fragment(self, time_band, frequency_band=None):
         begin, end = tuple(sorted(time_band))
