@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, Qt, QPointF, QRectF
-from PyQt5.QtGui import QPainter, QPixmap, QImage, QBrush, QColor
+from PyQt5.QtGui import QPainter, QPixmap, QImage, QBrush, QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QRubberBand
 
 from analyze.media.sound import SoundFragment
@@ -25,6 +25,8 @@ class SpectrogramQGraphicsView(QGraphicsView):
         # self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
 
         # self.setMouseTracking(True)
+
+        self.scene.selection_rect = None
 
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
@@ -59,6 +61,13 @@ class SpectrogramQGraphicsView(QGraphicsView):
     def selected_rect_in_scene(self, rect):
         if not self.spectrogram:
             return
+
+        if self.scene.selection_rect:
+            self.scene.removeItem(self.scene.selection_rect)
+
+        self.scene.selection_rect = self.scene.addRect(
+            rect, pen=QPen(QColor('#00FF00'))
+        )
 
         loudest_pos = self.where_loudest_in_rect(rect)
 

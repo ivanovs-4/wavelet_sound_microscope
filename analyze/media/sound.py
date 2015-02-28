@@ -71,19 +71,16 @@ class SoundFragment(Sound):
         return src_samples[s_from: s_to + 1]
 
     def __repr__(self):
-        template = '''
-            <%s size: %r, samplerate: %r,
-            begin: %r, duration: %r, end: %r,
-            f_lower: %r, f_upper: %r>
-        '''
+        template = ('<%s size: %r, samplerate: %r, begin: %r, end: %r, '
+                    'duration: %r, f_lower: %r, f_upper: %r>')
 
         return template % (
             self.__class__.__name__,
             self.size,
             self.samplerate,
             round_significant(self.begin, 2),
-            round_significant(self.duration, 2),
             round_significant(self.end, 2),
+            round_significant(self.duration, 2),
             round_significant(self.f_lower, 2),
             round_significant(self.f_upper, 2),
         )
