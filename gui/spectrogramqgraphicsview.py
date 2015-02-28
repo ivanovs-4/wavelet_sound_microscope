@@ -55,6 +55,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
     fragment_selected = pyqtSignal(SoundFragment)
+    reseted = pyqtSignal()
 
     def update_spectrogram(self, spectrogram):
         self.spectrogram = spectrogram
@@ -67,6 +68,8 @@ class SpectrogramQGraphicsView(QGraphicsView):
         # FIXME Create some abstract tool for mouse events handling
         self.rubberBandActive = False
         self.rubberBand.hide()
+
+        self.reseted.emit()
 
     def show_image(self, im):
         if im.mode != 'RGB':
