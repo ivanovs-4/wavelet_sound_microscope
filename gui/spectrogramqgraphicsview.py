@@ -86,11 +86,21 @@ class SpectrogramQGraphicsView(QGraphicsView):
         if not self.spectrogram:
             return
 
-        sc = self.scene
-        sc.set_selection(rect)
+        self.scene.set_selection(rect)
 
+        self.deal_with_harmonics(rect)
+
+        fragment = self.spectrogram.get_sound_fragment(
+            (rect.left(), rect.right()),
+            (rect.bottom(), rect.top()),
+        )
+
+        self.fragment_selected.emit(fragment)
+
+    def deal_with_harmonics(self, rect):
         loudest_pos = self.where_loudest_in_rect(rect)
 
+        sc = self.scene
         sc.reset_harmonics()
         sc.add_harmonic(loudest_pos, size=7, brush=QBrush(QColor(255, 0, 0)))
 
@@ -114,13 +124,6 @@ class SpectrogramQGraphicsView(QGraphicsView):
                 size=4,
                 brush=QBrush(QColor(255, 200, 0))
             )
-
-        fragment = self.spectrogram.get_sound_fragment(
-            (rect.left(), rect.right()),
-            (rect.bottom(), rect.top()),
-        )
-
-        self.fragment_selected.emit(fragment)
 
     def where_loudest_in_rect(self, rect):
         x1 = rect.left()
