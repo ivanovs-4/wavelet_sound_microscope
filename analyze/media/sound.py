@@ -40,26 +40,25 @@ class Sound(object):
         sub.check_call(['mplayer', '-ao', 'alsa:noblock:device=hw=Set',
                         fragment_filename])
 
-    def get_fragment(self, time_band, frequency_band=None):
+    def get_fragment(self, time_band, frequency_band=(None, None)):
         begin, end = tuple(sorted(time_band))
 
-        if frequency_band:
-            f_lower, f_upper = tuple(sorted(frequency_band))
-        else:
-            f_lower, f_upper = None, None
+        fband = FrequenciesBand(*frequency_band)
 
         fragment_samples = self.samples[self.time2x(begin): self.time2x(end)]
 
         return SoundFragment(
-            fragment_samples, self.samplerate, begin, f_lower, f_upper
+            fragment_samples, self.samplerate, begin, fband
         )
 
 
-# FIXME use this instead of f_lower, f_upper
 class FrequenciesBand(object):
     def __init__(self, lower, upper):
-        self.lower = lower
-        self.upper = upper
+        if lower is not None and upper is not None:
+            self.lower, self.upper = sorted([lower, upper])
+
+        else:
+            self.lower, self.upper = lower, upper
 
     def filter(self, samples, samplerate):
         # FIXME implement calculation filtered samples
@@ -67,14 +66,14 @@ class FrequenciesBand(object):
 
 
 class SoundFragment(Sound):
-    def __init__(self, samples, samplerate, begin, f_lower, f_upper):
-        if f_lower or f_upper:
-            self.full_band_sound = SoundFragment(
-                samples, self.samplerate, begin, None, None)
-        else:
+    def __init__(self, samples, samplerate, begin, fband):
+        if fband.lower is None and fband.upper is None:
             self.full_band_sound = self
 
-        fband = FrequenciesBand(f_lower, f_upper)
+        else:
+            self.full_band_sound = SoundFragment(
+                samples, self.samplerate, begin, FrequenciesBand(None, None)
+            )
 
         self.samples = fband.filter(samples, samplerate)
         self.size = len(self.samples)
@@ -83,15 +82,14 @@ class SoundFragment(Sound):
         self.duration = self.size / self.samplerate
         self.end = self.begin + self.duration
 
-        self.f_lower = f_lower
-        self.f_upper = f_upper
+        self.fband = fband
 
     def get_fragment(self, *args, **kwargs):
         raise NotImplemented
 
     def __repr__(self):
         template = ('<%s size: %r, samplerate: %r, begin: %r, end: %r, '
-                    'duration: %r, f_lower: %r, f_upper: %r>')
+                    'duration: %r, f:[%r:%r]>')
 
         return template % (
             self.__class__.__name__,
@@ -100,8 +98,8 @@ class SoundFragment(Sound):
             round_significant(self.begin, 2),
             round_significant(self.end, 2),
             round_significant(self.duration, 2),
-            round_significant(self.f_lower, 2),
-            round_significant(self.f_upper, 2),
+            round_significant(self.fband.lower, 2),
+            round_significant(self.fband.upper, 2),
         )
 
 
