@@ -58,7 +58,7 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
         # self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
 
         # self.setMouseTracking(True)
-        self.rect_in_scene_selected.connect(self.on_rect_in_scene_selected)
+        self.rect_selected.connect(self.on_rect_selected)
 
     fragment_selected = pyqtSignal(SoundFragment)
     reseted = pyqtSignal()
@@ -87,17 +87,20 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
         self.scene.clear()
         self.scene.addPixmap(QPixmap.fromImage(image))
 
-    def on_rect_in_scene_selected(self, rect):
-        log.debug('on_rect_in_scene_selected(self, rect)')
-
+    def on_rect_selected(self, rect):
         if not self.spectrogram:
             return
 
-        self.scene.set_selection(rect)
+        scene_rect = QRectF(
+            self.mapToScene(rect.topLeft()),
+            self.mapToScene(rect.bottomRight())
+        )
+
+        self.scene.set_selection(scene_rect)
 
         fragment = self.spectrogram.get_sound_fragment(
-            (rect.left(), rect.right()),
-            (rect.bottom(), rect.top()),
+            (scene_rect.left(), scene_rect.right()),
+            (scene_rect.bottom(), scene_rect.top()),
         )
 
         self.fragment_selected.emit(fragment)

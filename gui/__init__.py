@@ -10,15 +10,9 @@ class RubberbandSelectionQGraphicsView(QGraphicsView):
     def __init__(self, scene):
         super().__init__(self.scene)
         self.rubberBand = OriginQRubberBand(QRubberBand.Rectangle, self)
-        self.rubberBand.selected.connect(self.on_rubberband_selected)
+        self.rubberBand.selected.connect(self.rect_selected.emit)
 
-    rect_in_scene_selected = pyqtSignal(QRectF)
-
-    def on_rubberband_selected(self, rect):
-        self.rect_in_scene_selected.emit(
-            QRectF(self.mapToScene(rect.topLeft()),
-                   self.mapToScene(rect.bottomRight()))
-        )
+    rect_selected = pyqtSignal(QRect)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
