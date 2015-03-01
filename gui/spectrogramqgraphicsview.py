@@ -119,24 +119,26 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
         sc.add_harmonic(loudest_pos, size=7, brush=QBrush(QColor(255, 0, 0)))
 
         # Harmonics show prototype
-        for j in range(12):
+        from analyze.media.notes import HARMONIC_COLORS
+
+        for h in list(HARMONIC_COLORS.keys())[1:25]:
             f = self.spectrogram.y2freq(loudest_pos.y())
-            y2 = self.spectrogram.freq2y(f * (j + 2))
+            y2 = self.spectrogram.freq2y(f * h)
 
             sc.add_harmonic(
                 QPointF(loudest_pos.x(), y2),
                 size=4,
-                brush=QBrush(QColor(255, 0, 0))
+                brush=QBrush(QColor(HARMONIC_COLORS[h]))
             )
 
-        for j in range(12):
+        for h in range(2, 14):
             f = self.spectrogram.y2freq(loudest_pos.y())
-            y2 = self.spectrogram.freq2y(f / (j + 2))
+            y2 = self.spectrogram.freq2y(f / h)
 
             sc.add_harmonic(
                 QPointF(loudest_pos.x(), y2),
                 size=4,
-                brush=QBrush(QColor(255, 200, 0))
+                brush=QBrush(QColor('#bbb'))
             )
 
     def where_loudest_in_rect(self, rect):
