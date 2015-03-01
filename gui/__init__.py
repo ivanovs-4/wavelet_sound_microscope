@@ -29,32 +29,13 @@ class RubberbandSelectionQGraphicsView(QGraphicsView):
         else:
             self.rubberBand.done(event.pos())
 
-#     if(event.button() == Qt::LeftButton){
-#         LastPanPoint = event.pos()
-#     }
-
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-
         self.rubberBand.handle_move(event.pos())
-#     else{
-#         if(!LastPanPoint.isNull()) {
-#             //Get how much we panned
-#             QGraphicsView * view = static_cast<QGraphicsView *>(this)
-#             QPointF delta = view.mapToScene(LastPanPoint) - view.mapToScene(event.pos())
-#             LastPanPoint = event.pos()
-#         }
-#     }
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-
         self.rubberBand.done(event.pos())
-
-        # if event.buttons() == Qt.LeftButton:
-#     else{
-#         LastPanPoint = QPoint()
-#     }
 
 
 class OriginQRubberBand(QRubberBand):
