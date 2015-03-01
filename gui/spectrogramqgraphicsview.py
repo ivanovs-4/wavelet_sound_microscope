@@ -3,9 +3,11 @@ import logging
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, Qt, QPointF, QRectF
 from PyQt5.QtGui import QPainter, QPixmap, QImage, QBrush, QColor, QPen
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QRubberBand
+from PyQt5.QtWidgets import QGraphicsScene
 
 from analyze.media.sound import SoundFragment
+
+from . import RubberbandSelectionQGraphicsView
 
 
 log = logging.getLogger(__name__)
@@ -42,7 +44,7 @@ class SpectrogramQGraphicsScene(QGraphicsScene):
         self.harmonics_items.append(el)
 
 
-class SpectrogramQGraphicsView(QGraphicsView):
+class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
     def __init__(self):
         self.spectrogram = None
         self.scene = SpectrogramQGraphicsScene()
@@ -56,8 +58,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
         # self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
 
         # self.setMouseTracking(True)
-
-        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
+        self.rect_in_scene_selected.connect(self.on_rect_in_scene_selected)
 
     fragment_selected = pyqtSignal(SoundFragment)
     reseted = pyqtSignal()
@@ -69,10 +70,6 @@ class SpectrogramQGraphicsView(QGraphicsView):
     def reset(self):
         self.spectrogram = None
         self.scene.clear()
-
-        # FIXME Create some abstract tool for mouse events handling
-        self.rubberBandActive = False
-        self.rubberBand.hide()
 
         self.reseted.emit()
 
@@ -90,7 +87,7 @@ class SpectrogramQGraphicsView(QGraphicsView):
         self.scene.clear()
         self.scene.addPixmap(QPixmap.fromImage(image))
 
-    def selected_rect_in_scene(self, rect):
+    def on_rect_in_scene_selected(self, rect):
         if not self.spectrogram:
             return
 
@@ -150,67 +147,10 @@ class SpectrogramQGraphicsView(QGraphicsView):
 
         return QPointF(x1 + x, y1 + y + 1)
 
-    def mousePressEvent(self, event):
-        log.debug('mousePressEvent %r', event)
-
-        # self.rubberBand.hide()
-
-#     if (event.button() == Qt::MiddleButton) {
-        self.rubberBandOrigin = event.pos()
-        self.rubberBand.setGeometry(event.x(), event.y(), 0, 0)
-        log.debug('rubberBand %r', self.rubberBand)
-        self.rubberBand.show()
-        self.rubberBandActive = True
-#     }
-#     if(event.button() == Qt::LeftButton){
-#         LastPanPoint = event.pos()
-#     }
-# }
-
     def mouseMoveEvent(self, event):
-# {
-#     if (event.buttons() == Qt::MiddleButton && rubberBandActive == true){
-        if getattr(self, 'rubberBandActive', False):
-            self.rubberBand.resize(
-                event.x() - self.rubberBandOrigin.x(),
-                event.y() - self.rubberBandOrigin.y()
-            )
-#     }
-#     else{
-#         if(!LastPanPoint.isNull()) {
-#             //Get how much we panned
-#             QGraphicsView * view = static_cast<QGraphicsView *>(this)
-#             QPointF delta = view.mapToScene(LastPanPoint) - view.mapToScene(event.pos())
-#             LastPanPoint = event.pos()
-#         }
-#     }
-# }
+        super().mouseMoveEvent(event)
         self.deal_with_harmonics(event.pos())
 
-
-    def mouseReleaseEvent(self, event):
-# {
-#    if (event.button() == Qt::MiddleButton){
-#         QGraphicsView * view = static_cast<QGraphicsView *>(this)
-
-        rubberBandEnd = event.pos()
-
-        selectedRectInScene = QRectF(
-            self.mapToScene(self.rubberBandOrigin),
-            self.mapToScene(rubberBandEnd)
-        )
-
-        self.selected_rect_in_scene(selectedRectInScene)
-
-        self.rubberBandActive = False
-        # log.debug('rubberBand %r', dir(self.rubberBand))
-        self.rubberBand.hide()
-#         delete rubberBand
-#     }
-#     else{
-#         LastPanPoint = QPoint()
-#     }
-# }
 
 # void MyGraphics::wheelEvent(QWheelEvent *event){
 #     if(event->delta() > 0){
