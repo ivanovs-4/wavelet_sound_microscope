@@ -39,7 +39,7 @@ class SpectrogramQGraphicsScene(QGraphicsScene):
         self.harmonics_items = []
 
     def add_harmonic(self, pos, size, **kwargs):
-        el = self.addEllipse(QRectF(-size, -size, size, size), **kwargs)
+        el = self.addEllipse(QRectF(-size/2, -size/2, size, size), **kwargs)
         el.setPos(pos)
         self.harmonics_items.append(el)
 
@@ -116,7 +116,7 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
 
         sc = self.scene
         sc.reset_harmonics()
-        sc.add_harmonic(loudest_pos, size=7, brush=QBrush(QColor(255, 0, 0)))
+        sc.add_harmonic(loudest_pos, size=8, brush=QBrush(QColor(255, 0, 0)))
 
         # Harmonics show prototype
         from analyze.media.notes import HARMONIC_COLORS
@@ -147,12 +147,12 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
         y1 = rect.top()
         y2 = rect.bottom()
 
-        abs_rect = self.spectrogram.abs_image[y1-1:y2, x1-1:x2]
+        abs_rect = self.spectrogram.abs_image[y1:y2+1, x1:x2+1]
 
         peak_index = np.unravel_index(abs_rect.argmax(), abs_rect.shape)
         y, x = peak_index
 
-        return QPointF(x1 + x, y1 + y + 1)
+        return QPointF(x1 + x, y1 + y)
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
