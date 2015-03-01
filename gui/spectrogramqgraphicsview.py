@@ -149,7 +149,9 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-        self.deal_with_harmonics(event.pos())
+
+        if event.buttons() == Qt.MiddleButton:
+            self.deal_with_harmonics(event.pos())
 
 
 # void MyGraphics::wheelEvent(QWheelEvent *event){

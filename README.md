@@ -9,7 +9,6 @@ On Geforce GT 630 it is about 3 x realtime.
 
 #### TODO muse_explorer
 * Extract rubberband selection in SpectrogramQGraphicsView
-* deal_with_harmonics only with mouse middle button
 * Unfiltered sound fragment
 * Universal play sound
 * Fix PyCUDA ERROR: The context stack was not empty upon module cleanup.
