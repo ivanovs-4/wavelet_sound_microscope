@@ -2,7 +2,7 @@
 Unspecific gui classes
 """
 
-from PyQt5.QtCore import pyqtSignal, Qt, QPointF, QRect, QRectF
+from PyQt5.QtCore import pyqtSignal, Qt, QPoint, QPointF, QRect, QRectF
 from PyQt5.QtWidgets import QGraphicsView, QRubberBand
 
 
@@ -48,10 +48,9 @@ class OriginQRubberBand(QRubberBand):
         if not self.origin:
             return
 
-        self.resize(
-            pos.x() - self.origin.x(),
-            pos.y() - self.origin.y()
-        )
+        x1, x2 = sorted([self.origin.x(), pos.x()])
+        y1, y2 = sorted([self.origin.y(), pos.y()])
+        self.setGeometry(QRect(QPoint(x1, y1), QPoint(x2, y2)))
 
     def done(self, pos):
         if not self.origin:
