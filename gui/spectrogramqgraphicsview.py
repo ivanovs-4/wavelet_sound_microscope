@@ -88,6 +88,8 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
         self.scene.addPixmap(QPixmap.fromImage(image))
 
     def on_rect_in_scene_selected(self, rect):
+        log.debug('on_rect_in_scene_selected(self, rect)')
+
         if not self.spectrogram:
             return
 
@@ -150,7 +152,7 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
 
-        if event.buttons() == Qt.MiddleButton:
+        if event.buttons() == Qt.RightButton:
             self.deal_with_harmonics(event.pos())
 
 
