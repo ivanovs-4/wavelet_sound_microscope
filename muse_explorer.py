@@ -47,9 +47,14 @@ class MainWindow(QMainWindow):
         self.fname = None
 
         self.spectrogram_view = SpectrogramQGraphicsView()
+
         self.spectrogram_view.reseted.connect(
             lambda: self.play_fragment_action.setEnabled(False)
         )
+        self.spectrogram_view.reseted.connect(
+            lambda: self.play_fragment_fb_action.setEnabled(False)
+        )
+
         self.spectrogram_view.fragment_selected.connect(
             self.on_sound_fragment_selected
         )
@@ -71,11 +76,19 @@ class MainWindow(QMainWindow):
             'Open sound file'
         )
 
+        # Play
         self.play_fragment_action = self.create_action(
-            '&Play fragment', self.play_fragment, shortcut='g',
+            'Play fra&gment', self.play_fragment, shortcut='g',
             tip='Play fragment'
         )
         self.play_fragment_action.setEnabled(False)
+
+        self.play_fragment_fb_action = self.create_action(
+            'Play full&band fragment', self.play_fragment_fb, shortcut='b',
+            tip='Play fullband fragment'
+        )
+        self.play_fragment_fb_action.setEnabled(False)
+        # /Play
 
         file_quit_action = self.create_action(
             '&Quit', self.close, 'Ctrl+Q', 'filequit', 'Close the application'
@@ -87,6 +100,7 @@ class MainWindow(QMainWindow):
         self.add_actions(file_toolbar, (
             file_open_action,
             self.play_fragment_action,
+            self.play_fragment_fb_action,
             file_quit_action,
         ))
 
@@ -100,12 +114,19 @@ class MainWindow(QMainWindow):
         self.fragment = fragment
         self.play_fragment()
         self.play_fragment_action.setEnabled(True)
+        self.play_fragment_fb_action.setEnabled(True)
 
     def play_fragment(self):
         if not getattr(self, 'fragment', False):
             return
 
         self.fragment.play()
+
+    def play_fragment_fb(self):
+        if not getattr(self, 'fragment', False):
+            return
+
+        self.fragment.full_band_sound.play()
 
     def file_open(self):
         if not self.ok_to_continue:

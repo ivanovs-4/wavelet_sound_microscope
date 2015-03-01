@@ -72,7 +72,7 @@ class SoundFragment(Sound):
 
         else:
             self.full_band_sound = SoundFragment(
-                samples, self.samplerate, begin, FrequenciesBand(None, None)
+                samples, samplerate, begin, FrequenciesBand(None, None)
             )
 
         self.samples = fband.filter(samples, samplerate)
