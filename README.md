@@ -8,10 +8,8 @@ On Geforce GT 630 it is about 3 x realtime.
 
 
 #### TODO muse_explorer
-* Unfiltered sound fragment
 * Universal play sound
 * Fix PyCUDA ERROR: The context stack was not empty upon module cleanup.
 * Long cache composition results
 * Use smooth horizontal normalization
-* Zoom and play selected area
 * Debian package

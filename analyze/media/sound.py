@@ -4,6 +4,8 @@ import subprocess as sub
 
 import numpy as np
 import scipy.signal
+
+
 import pysoundfile as sf
 
 from utils import IterableWithLength, round_significant
@@ -61,8 +63,46 @@ class FrequenciesBand(object):
             self.lower, self.upper = lower, upper
 
     def filter(self, samples, samplerate):
-        # FIXME implement calculation filtered samples
+        return bandpass_filter(samples, samplerate, self.lower, self.upper)
+
+
+def bandpass_filter(samples, samplerate, f_lower=None, f_upper=None):
+    flen = (samplerate // 16) * 2 + 1
+
+    if f_lower is not None:
+        lowpass = scipy.signal.firwin(
+            flen, cutoff=f_lower/(samplerate/2),
+            window='hanning'
+        )
+
+    else:
+        lowpass = None
+
+    if f_upper is not None:
+        highpass = - scipy.signal.firwin(
+            flen, cutoff=f_upper/(samplerate/2),
+            window='hanning'
+        )
+        highpass[flen//2] = highpass[flen//2] + 1
+
+    else:
+        highpass = None
+
+    if lowpass is not None:
+        if highpass is not None:
+            bandpass = lowpass + highpass
+        else:
+            bandpass = lowpass
+    else:
+        bandpass = highpass
+
+    if bandpass is None:
         return samples
+
+    bandpass = - bandpass
+    bandpass[flen//2] = bandpass[flen//2] + 1
+
+    return scipy.signal.lfilter(bandpass, 1, samples)
 
 
 class SoundFragment(Sound):
@@ -98,8 +138,8 @@ class SoundFragment(Sound):
             round_significant(self.begin, 2),
             round_significant(self.end, 2),
             round_significant(self.duration, 2),
-            round_significant(self.fband.lower, 2),
-            round_significant(self.fband.upper, 2),
+            self.fband.lower and round_significant(self.fband.lower, 2),
+            self.fband.upper and round_significant(self.fband.upper, 2),
         )
 
 
