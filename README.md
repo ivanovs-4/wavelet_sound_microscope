@@ -8,6 +8,7 @@ On Geforce GT 630 it is about 3 x realtime.
 
 
 #### TODO muse_explorer
+* Use FrequenciesBand
 * Unfiltered sound fragment
 * Universal play sound
 * Fix PyCUDA ERROR: The context stack was not empty upon module cleanup.

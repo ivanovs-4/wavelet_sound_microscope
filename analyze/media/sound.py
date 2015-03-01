@@ -48,21 +48,36 @@ class Sound(object):
         else:
             f_lower, f_upper = None, None
 
-        fragment_samples = SoundFragment.calculate_samples(
-            self.samples, self.samplerate,
-            self.time2x(begin), self.time2x(end),
-            f_lower, f_upper
-        )
+        fragment_samples = self.samples[self.time2x(begin): self.time2x(end)]
 
         return SoundFragment(
             fragment_samples, self.samplerate, begin, f_lower, f_upper
         )
 
 
+# FIXME use this instead of f_lower, f_upper
+class FrequenciesBand(object):
+    def __init__(self, lower, upper):
+        self.lower = lower
+        self.upper = upper
+
+    def filter(self, samples, samplerate):
+        # FIXME implement calculation filtered samples
+        return samples
+
+
 class SoundFragment(Sound):
     def __init__(self, samples, samplerate, begin, f_lower, f_upper):
-        self.samples = samples
-        self.size = len(samples)
+        if f_lower or f_upper:
+            self.full_band_sound = SoundFragment(
+                samples, self.samplerate, begin, None, None)
+        else:
+            self.full_band_sound = self
+
+        fband = FrequenciesBand(f_lower, f_upper)
+
+        self.samples = fband.filter(samples, samplerate)
+        self.size = len(self.samples)
         self.samplerate = samplerate
         self.begin = begin
         self.duration = self.size / self.samplerate
@@ -71,12 +86,8 @@ class SoundFragment(Sound):
         self.f_lower = f_lower
         self.f_upper = f_upper
 
-    @staticmethod
-    def calculate_samples(src_samples, samplerate, s_from, s_to,
-                          f_lower, f_upper):
-
-        # FIXME implement frequency filter if f_lower, f_upper
-        return src_samples[s_from: s_to + 1]
+    def get_fragment(self, *args, **kwargs):
+        raise NotImplemented
 
     def __repr__(self):
         template = ('<%s size: %r, samplerate: %r, begin: %r, end: %r, '
