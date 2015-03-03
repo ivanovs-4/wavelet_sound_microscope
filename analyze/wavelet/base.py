@@ -100,12 +100,12 @@ def angularfreq(nsamples, samplerate):
 
     N2 = nsamples / 2.0
 
-    return np.fromiter(
-        (
+    return np.array(
+        [
             samplerate * PI2 * (i if i <= N2 else i - nsamples) / nsamples
             for i in range(nsamples)
-        ),
-        np.float32, nsamples
+        ],
+        np.float32
     )
 
 
@@ -118,7 +118,7 @@ def autoscales(nsamples, samplerate, scale_resolution, omega0):
         np.log2(nsamples / (samplerate * s0)) / scale_resolution
     ))
 
-    return np.fromiter(
-        (s0 * 2 ** (i * scale_resolution) for i in range(J + 1)),
-        np.float32, J + 1
+    return np.array(
+        [s0 * 2 ** (i * scale_resolution) for i in range(J + 1)],
+        np.float32
     )
