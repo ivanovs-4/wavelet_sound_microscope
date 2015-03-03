@@ -111,6 +111,7 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0, self.load_initial_file)
 
     def on_sound_fragment_selected(self, fragment):
+        self.status_show(repr(fragment))
         self.fragment = fragment
         self.play_fragment()
         self.play_fragment_action.setEnabled(True)

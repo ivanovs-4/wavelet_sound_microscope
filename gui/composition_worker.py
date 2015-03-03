@@ -82,7 +82,7 @@ class QCompositionWorker(QThreadedWorker):
         try:
             with CompositionWithProgressbar(
                 progressbar, sound,
-                scale_resolution=1/100, omega0=64, decimation_factor=8
+                scale_resolution=1/100, omega0=70
             ) as composition:
 
                 self._message('Analyse')

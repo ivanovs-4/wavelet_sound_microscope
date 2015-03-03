@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class Composition(object):
     def __init__(self, sound,
-                 scale_resolution=1/36, omega0=70, decimation_factor=9):
+                 scale_resolution=1/36, omega0=70):
         self.sound = sound
         self.scale_resolution = scale_resolution
         self.omega0 = omega0
@@ -21,12 +21,11 @@ class Composition(object):
         # Calculate chunk_size
         # samplerate = sound.samples / sound.duration
         self.samplerate = sound.samplerate
-        self.overlapping_block_size = 2 ** (
-            1 + int(np.log2(self.samplerate - 1) / 10)
-        )
-        self.chunk_size = self.overlapping_block_size // 2
 
-        self.decimate = self.overlapping_block_size // 2 ** decimation_factor
+        self.overlapping_block_size = 2 ** 17
+        self.decimate = 2 ** int(np.log2(self.samplerate) - 8)
+
+        self.chunk_size = self.overlapping_block_size // 2
 
         self._wbox = None
 
