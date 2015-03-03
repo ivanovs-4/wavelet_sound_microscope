@@ -35,7 +35,7 @@ class Composition(object):
 
         self._wbox = WaveletBox(
             self.fragment_size,
-            time_step=1,
+            samplerate=1,
             scale_resolution=self.scale_resolution,
             omega0=self.omega0
         )

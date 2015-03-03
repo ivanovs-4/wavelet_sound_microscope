@@ -46,12 +46,12 @@ multiply_them = ElementwiseKernel(
 
 class WaveletBox(BaseWaveletBox):
 
-    def __init__(self, nsamples, time_step, scale_resolution, omega0):
+    def __init__(self, nsamples, samplerate, scale_resolution, omega0):
         super(WaveletBox, self). \
-            __init__(nsamples, time_step, scale_resolution, omega0)
+            __init__(nsamples, samplerate, scale_resolution, omega0)
 
         self.wft = morlet_ft_box(self.scales, self.angular_frequencies,
-                                 omega0, time_step)
+                                 omega0, samplerate)
 
         stream = cuda.Stream()
 
@@ -99,11 +99,11 @@ class WaveletBox(BaseWaveletBox):
         return complex_image
 
 
-def normalization(scale, time_step):
-    return np.sqrt(PI2 * scale / time_step)
+def normalization(scale, samplerate):
+    return np.sqrt(PI2 * scale * samplerate)
 
 
-def morlet_ft_box(scales, angular_frequencies, omega0, time_step):
+def morlet_ft_box(scales, angular_frequencies, omega0, samplerate):
     """ Fourier tranformed morlet function """
 
     pi_sqr_1_4 = 0.75112554446494251  # pi**(-1.0/4.0)
@@ -113,7 +113,7 @@ def morlet_ft_box(scales, angular_frequencies, omega0, time_step):
     gpu_angular_frequencies = gpuarray.to_gpu(angular_frequencies)
 
     for i in range(scales.shape[0]):
-        norma = normalization(scales[i], time_step)
+        norma = normalization(scales[i], samplerate)
 
         wavelet[i] = gpuarray.empty(
             (angular_frequencies.shape[0],),
@@ -129,29 +129,6 @@ def morlet_ft_box(scales, angular_frequencies, omega0, time_step):
         )
 
     return wavelet
-
-
-'''
-def icwt(X, time_step, scales, omega0=2):
-    """
-    Inverse Continuous Wavelet Tranform.
-    The reconstruction factor is not applied.
-    """
-
-    X_arr = asarray(X)
-    scales_arr = asarray(scales)
-
-    if X_arr.shape[0] != scales_arr.shape[0]:
-        raise ValueError('X, scales: shape mismatch')
-
-    X_ARR = empty_like(X_arr)
-    for i in range(scales_arr.shape[0]):
-        X_ARR[i] = X_arr[i] / sqrt(scales_arr[i])
-
-    x = sum(real(X_ARR), axis=0)
-
-    return x
-'''
 
 
 def extract_columns(mat, start, stop):

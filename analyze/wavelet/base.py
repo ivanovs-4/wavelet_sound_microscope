@@ -47,14 +47,14 @@ def is_power_of_two(val):
 
 
 class BaseWaveletBox(object):
-    def __init__(self, nsamples, time_step, scale_resolution, omega0):
+    def __init__(self, nsamples, samplerate, scale_resolution, omega0):
         if not is_power_of_two(nsamples):
             raise Exception(u'nsamples must be power of two')
 
         self.nsamples = nsamples
-        self.scales = autoscales(nsamples, time_step,
+        self.scales = autoscales(nsamples, samplerate,
                                  scale_resolution, omega0)
-        self.angular_frequencies = angularfreq(nsamples, time_step)
+        self.angular_frequencies = angularfreq(nsamples, samplerate)
 
     def apply_cwt(self, chunks, **kwargs):
         half_nsamples = self.nsamples / 2
@@ -95,27 +95,27 @@ class BaseWaveletBox(object):
         return np.concatenate(flattened_images, axis=1)
 
 
-def angularfreq(nsamples, time_step):
+def angularfreq(nsamples, samplerate):
     """ Compute angular frequencies """
 
     N2 = nsamples / 2.0
 
     return np.fromiter(
         (
-            PI2 * (i if i <= N2 else i - nsamples) / (nsamples * time_step)
+            PI2 * (i if i <= N2 else i - nsamples) / (nsamples / samplerate)
             for i in range(nsamples)
         ),
         np.float32, nsamples
     )
 
 
-def autoscales(nsamples, time_step, scale_resolution, omega0):
+def autoscales(nsamples, samplerate, scale_resolution, omega0):
     """ Compute scales as fractional power of two """
 
-    s0 = (time_step * (omega0 + np.sqrt(2 + omega0 ** 2))) / PI2
+    s0 = ((omega0 + np.sqrt(2 + omega0 ** 2)) / samplerate) / PI2
 
     J = int(np.floor(scale_resolution ** -1 *
-                     np.log2((nsamples * time_step) / s0)))
+                     np.log2((nsamples / samplerate) / s0)))
 
     return np.fromiter(
         (s0 * 2 ** (i * scale_resolution) for i in range(J + 1)),
