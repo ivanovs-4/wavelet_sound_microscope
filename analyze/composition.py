@@ -21,12 +21,12 @@ class Composition(object):
         # Calculate chunk_size
         # samplerate = sound.samples / sound.duration
         self.samplerate = sound.samplerate
-        self.fragment_size = 2 ** (
+        self.overlapping_block_size = 2 ** (
             1 + int(np.log2(self.samplerate - 1) / 10)
         )
-        self.chunk_size = self.fragment_size // 2
+        self.chunk_size = self.overlapping_block_size // 2
 
-        self.decimate = self.fragment_size // 2 ** decimation_factor
+        self.decimate = self.overlapping_block_size // 2 ** decimation_factor
 
         self._wbox = None
 
@@ -34,7 +34,7 @@ class Composition(object):
         from .wavelet.cuda_backend import WaveletBox
 
         self._wbox = WaveletBox(
-            self.fragment_size,
+            self.overlapping_block_size,
             samplerate=self.samplerate,
             scale_resolution=self.scale_resolution,
             omega0=self.omega0
