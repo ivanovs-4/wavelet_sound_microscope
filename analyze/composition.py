@@ -20,9 +20,9 @@ class Composition(object):
 
         # Calculate chunk_size
         # samplerate = sound.samples / sound.duration
-        samplerate = sound.samplerate
+        self.samplerate = sound.samplerate
         self.fragment_size = 2 ** (
-            1 + int(np.log2(samplerate - 1))
+            1 + int(np.log2(self.samplerate - 1) / 10)
         )
         self.chunk_size = self.fragment_size // 2
 
@@ -35,7 +35,7 @@ class Composition(object):
 
         self._wbox = WaveletBox(
             self.fragment_size,
-            samplerate=1,
+            samplerate=self.samplerate,
             scale_resolution=self.scale_resolution,
             omega0=self.omega0
         )
