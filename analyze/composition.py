@@ -5,7 +5,7 @@ import numpy as np
 from scipy.misc import toimage
 
 from .media import apply_colormap
-from utils import cached_property
+from utils import cached_property, ProgressProxy
 
 
 log = logging.getLogger(__name__)
@@ -42,12 +42,6 @@ class Composition(object):
         # FIXME cache wbox or free resources
         self._wbox = None
 
-    @cached_property
-    def complex_image(self):
-        blocks = self.sound.get_blocks(self.overlapping_block_size)
-
-        return self.get_complex_image(blocks)
-
     def get_complex_image(self, blocks):
         if not self._wbox:
             raise RuntimeError('You need to use {} in a with block'.
@@ -55,9 +49,17 @@ class Composition(object):
 
         return self._wbox.apply_cwt(blocks, decimate=self.decimate)
 
-    def get_spectrogram(self):
+    def get_spectrogram(self, progressbar=None):
+        blocks = self.sound.get_blocks(self.overlapping_block_size)
+
+        if not progressbar:
+            progressbar = ProgressProxy
+
+        with progressbar(blocks) as blocks_:
+            complex_image = self.get_complex_image(blocks_)
+
         return Spectrogram(
-            abs_image=np.abs(self.complex_image),
+            abs_image=np.abs(complex_image),
             sound=self.sound,
             scales=self._wbox.scales[:]
         )
@@ -98,13 +100,3 @@ class Spectrogram(object):
         frequency_band = tuple(map(self.y2freq, y1y2))
 
         return self.sound.get_fragment(time_band, frequency_band)
-
-
-class CompositionWithProgressbar(Composition):
-    def __init__(self, progressbar, *args, **kwargs):
-        self.progressbar = progressbar
-        super().__init__(*args, **kwargs)
-
-    def get_complex_image(self, blocks):
-        with self.progressbar(blocks) as block_:
-            return super().get_complex_image(block_)

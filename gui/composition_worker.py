@@ -6,7 +6,7 @@ from PIL.Image import Image
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
 from .threading import QThreadedWorkerDebug as QThreadedWorker
-from analyze.composition import CompositionWithProgressbar, Spectrogram
+from analyze.composition import Composition, Spectrogram
 from analyze.media.sound import Sound
 from utils import ProgressProxy
 
@@ -80,13 +80,12 @@ class QCompositionWorker(QThreadedWorker):
         self._message('Prepare composition')
 
         try:
-            with CompositionWithProgressbar(
-                progressbar, sound,
-                scale_resolution=1/100, omega0=70
+            with Composition(
+                sound, scale_resolution=1/100, omega0=70
             ) as composition:
 
                 self._message('Analyse')
-                spectrogram = composition.get_spectrogram()
+                spectrogram = composition.get_spectrogram(progressbar)
 
         except CompositionCanceled:
             log.debug('Composition canceled')
