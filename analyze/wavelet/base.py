@@ -46,6 +46,18 @@ def is_power_of_two(val):
     return val and val & (val - 1) == 0
 
 
+def gen_halfs(arrays):
+    for array in arrays:
+        pair = split_array(array, len(array) // 2)
+
+        for j in filter(len, pair):
+            yield j
+
+
+def split_array(array, where):
+    return array[:where], array[-where:]
+
+
 class BaseWaveletBox(object):
     def __init__(self, nsamples, samplerate, scale_resolution, omega0):
         if not is_power_of_two(nsamples):
@@ -57,8 +69,7 @@ class BaseWaveletBox(object):
         self.angular_frequencies = angularfreq(nsamples, samplerate)
 
     def apply_cwt(self, blocks, **kwargs):
-        # FIXME make chunks overlapping self here
-        chunks = blocks
+        chunks = gen_halfs(blocks)
 
         half_nsamples = self.nsamples / 2
         pad_num = 0

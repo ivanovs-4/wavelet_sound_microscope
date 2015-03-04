@@ -44,8 +44,7 @@ class Composition(object):
 
     @cached_property
     def complex_image(self):
-        # FIXME make chunks overlapping in BaseWaveletBox.apply_cwt
-        blocks = self.sound.get_blocks(self.overlapping_block_size // 2)
+        blocks = self.sound.get_blocks(self.overlapping_block_size)
 
         return self.get_complex_image(blocks)
 
