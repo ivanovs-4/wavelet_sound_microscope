@@ -123,7 +123,6 @@ def autoscales(samples_count, samplerate, scale_resolution, omega0):
         np.log2(upper_frequency) / scale_resolution
     ))
 
-    scales_indices = np.arange(scales_count + 1,
-                               endpoint=False, dtype=np.float32)
+    indexes = np.arange(scales_count + 1, endpoint=False, dtype=np.float32)
 
-    return upper_frequency_scale * (2 ** (scales_indices * scale_resolution))
+    return upper_frequency_scale * (2 ** (indexes * scale_resolution))
