@@ -135,26 +135,28 @@ def autoscales(samples_count, samplerate, scale_resolution, omega0):
 
     samples_duration = samples_count / samplerate
 
-    upper_frequency = PI2 * samples_count / (omega0 + np.sqrt(2 + omega0 ** 2))
+    frequencies_interval = PI2 * samples_count / (
+        omega0 + np.sqrt(2 + omega0 ** 2)
+    )
 
     indexes_count = int(np.floor(
-        np.log2(upper_frequency) / scale_resolution
+        np.log2(frequencies_interval) / scale_resolution
     ))
 
     # Самый больший индекс - это двоичный логарифм самой высокой
     # частоты поделенный на scale_resolution
     indexes = np.arange(indexes_count + 1, endpoint=False, dtype=np.float32)
 
-    upper_frequency_scale = samples_duration / upper_frequency
+    upper_frequency_scale = samples_duration / frequencies_interval
 
     # А самый высокий индекс умноженный на scale_resolution - это двоичный
     # логарифм самой высокой частоты
-    # upper_frequency == (2 ** (indexes_count * scale_resolution))
+    # frequencies_interval == (2 ** (indexes_count * scale_resolution))
 
     logarithmic_indexes = 2 ** (indexes * scale_resolution)
 
     # Самая большая scale - samples_duration
     # Самая меньшая scale - upper_frequency_scale
-    # upper_frequency == samples_duration / upper_frequency_scale
+    # frequencies_interval == samples_duration / upper_frequency_scale
 
     return upper_frequency_scale * logarithmic_indexes
