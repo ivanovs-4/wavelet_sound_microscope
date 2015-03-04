@@ -21,7 +21,7 @@ class Composition(object):
         # samplerate = sound.samples / sound.duration
         self.samplerate = sound.samplerate
 
-        self.overlapping_block_size = 2 ** 17
+        self.block_size = 2 ** 17
         self.decimate = 2 ** int(np.log2(self.samplerate) - 8)
 
         self._wbox = None
@@ -30,7 +30,7 @@ class Composition(object):
         from .wavelet.cuda_backend import WaveletBox
 
         self._wbox = WaveletBox(
-            self.overlapping_block_size,
+            self.block_size,
             samplerate=self.samplerate,
             scale_resolution=self.scale_resolution,
             omega0=self.omega0
