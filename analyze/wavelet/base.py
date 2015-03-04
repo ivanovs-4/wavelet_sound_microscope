@@ -112,13 +112,14 @@ def angularfreq(nsamples, samplerate):
 def autoscales(nsamples, samplerate, scale_resolution, omega0):
     """ Compute scales as fractional power of two """
 
+    # s0 - scale of upper frequency
     s0 = ((omega0 + np.sqrt(2 + omega0 ** 2)) / (samplerate * PI2))
 
     samples_duration = nsamples / samplerate
-    freq0 = samples_duration / s0
+    upper_frequency = samples_duration / s0
 
     J = int(np.floor(
-        np.log2(freq0) / scale_resolution
+        np.log2(upper_frequency) / scale_resolution
     ))
 
     J1 = J + 1
