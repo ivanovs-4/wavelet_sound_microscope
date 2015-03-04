@@ -121,7 +121,10 @@ def autoscales(nsamples, samplerate, scale_resolution, omega0):
         np.log2(freq0) / scale_resolution
     ))
 
+    J1 = J + 1
+    ran = range(J1)
+
     return np.array(
-        [s0 * 2 ** (i * scale_resolution) for i in range(J + 1)],
+        [s0 * 2 ** (i * scale_resolution) for i in ran],
         np.float32
     )
