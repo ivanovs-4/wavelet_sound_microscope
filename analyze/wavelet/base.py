@@ -122,7 +122,6 @@ def autoscales(samples_count, samplerate, scale_resolution, omega0):
         np.log2(upper_frequency) / scale_resolution
     ))
 
-    J1 = J + 1
-    ran = np.linspace(0, J1, J1, endpoint=False, dtype=np.float32)
+    ran = np.linspace(0, J + 1, J + 1, endpoint=False, dtype=np.float32)
 
     return scale0 * (2 ** (ran * scale_resolution))
