@@ -115,7 +115,7 @@ def autoscales(nsamples, samplerate, scale_resolution, omega0):
     s0 = ((omega0 + np.sqrt(2 + omega0 ** 2)) / (samplerate * PI2))
 
     J = int(np.floor(
-        np.log2(nsamples / (samplerate * s0)) / scale_resolution
+        np.log2((nsamples / samplerate) / s0) / scale_resolution
     ))
 
     return np.array(
