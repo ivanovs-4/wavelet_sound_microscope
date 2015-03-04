@@ -114,7 +114,7 @@ def autoscales(samples_count, samplerate, scale_resolution, omega0):
 
     samples_duration = samples_count / samplerate
 
-    upper_frequency = samples_duration / (
+    upper_frequency = (samples_count / samplerate) / (
         (omega0 + np.sqrt(2 + omega0 ** 2)) / (samplerate * PI2)
     )
 
