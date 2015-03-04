@@ -42,21 +42,23 @@ class Composition(object):
         # FIXME cache wbox or free resources
         self._wbox = None
 
-    def get_complex_image(self, blocks):
+    def get_complex_image(self, progressbar=None):
         if not self._wbox:
             raise RuntimeError('You need to use {} in a with block'.
                                format(self.__class__.__name__))
 
-        return self._wbox.apply_cwt(blocks, decimate=self.decimate)
-
-    def get_spectrogram(self, progressbar=None):
-        blocks = self.sound.get_blocks(self.overlapping_block_size)
-
         if not progressbar:
             progressbar = ProgressProxy
 
+        blocks = self.sound.get_blocks(self.overlapping_block_size)
+
         with progressbar(blocks) as blocks_:
-            complex_image = self.get_complex_image(blocks_)
+            complex_image = self._wbox.apply_cwt(blocks, decimate=self.decimate)
+
+        return complex_image
+
+    def get_spectrogram(self, progressbar=None):
+        complex_image = self.get_complex_image(progressbar)
 
         return Spectrogram(
             abs_image=np.abs(complex_image),
