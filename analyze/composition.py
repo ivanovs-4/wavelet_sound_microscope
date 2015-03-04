@@ -50,12 +50,9 @@ class Composition(object):
         if not progressbar:
             progressbar = ProgressProxy
 
-        blocks = self.sound.get_blocks(self.overlapping_block_size)
-
-        with progressbar(blocks) as blocks_:
-            complex_image = self._wbox.apply_cwt(blocks, decimate=self.decimate)
-
-        return complex_image
+        return self._wbox.sound_apply_cwt(
+            self.sound, progressbar, decimate=self.decimate
+        )
 
     def get_spectrogram(self, progressbar=None):
         complex_image = self.get_complex_image(progressbar)

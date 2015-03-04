@@ -68,7 +68,13 @@ class BaseWaveletBox(object):
                                  scale_resolution, omega0)
         self.angular_frequencies = angularfreq(nsamples, samplerate)
 
-    def apply_cwt(self, blocks, **kwargs):
+    def sound_apply_cwt(self, sound, progressbar, **kwargs):
+        blocks = sound.get_blocks(self.nsamples)
+
+        with progressbar(blocks) as blocks_:
+            return self._apply_cwt(self, blocks_, progressbar, **kwargs)
+
+    def _apply_cwt(self, blocks, **kwargs):
         chunks = gen_halfs(blocks)
 
         half_nsamples = self.nsamples / 2
@@ -77,6 +83,7 @@ class BaseWaveletBox(object):
         def np_pad_right(data):
             pad_num = half_nsamples - len(data)
             if pad_num < 0:
+                assert False  # Should never come here
                 raise Exception(u'Chunks size must be equal to nsamples / 2'
                                 u' except last, which may be shorter')
             if pad_num:
