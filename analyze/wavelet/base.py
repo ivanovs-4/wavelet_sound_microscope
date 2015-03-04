@@ -114,16 +114,16 @@ def autoscales(samples_count, samplerate, scale_resolution, omega0):
 
     samples_duration = samples_count / samplerate
 
-    upper_frequency_scale = (
+    upper_frequency = samples_duration / (
         (omega0 + np.sqrt(2 + omega0 ** 2)) / (samplerate * PI2)
     )
-
-    upper_frequency = samples_duration / upper_frequency_scale
 
     scales_count = int(np.floor(
         np.log2(upper_frequency) / scale_resolution
     ))
 
     indexes = np.arange(scales_count + 1, endpoint=False, dtype=np.float32)
+
+    upper_frequency_scale = samples_duration / upper_frequency
 
     return upper_frequency_scale * (2 ** (indexes * scale_resolution))
