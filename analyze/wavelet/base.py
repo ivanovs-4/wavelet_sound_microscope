@@ -125,6 +125,6 @@ def autoscales(nsamples, samplerate, scale_resolution, omega0):
     ran = np.linspace(0, J1, J1, endpoint=False)
 
     return np.array(
-        [s0 * 2 ** (i * scale_resolution) for i in ran],
+        [s0 * 2 ** i for i in ran * scale_resolution],
         np.float32
     )
