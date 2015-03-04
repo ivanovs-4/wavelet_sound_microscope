@@ -68,6 +68,11 @@ class BaseWaveletBox(object):
                                  scale_resolution, omega0)
         self.angular_frequencies = angularfreq(nsamples, samplerate)
 
+    @property
+    def frequencies(self):
+        # FIXME set coefficient in accordance with wavelet type
+        return 1 / self.scales
+
     def sound_apply_cwt(self, sound, progressbar, **kwargs):
         blocks = sound.get_blocks(self.nsamples)
 

@@ -60,17 +60,17 @@ class Composition(object):
         return Spectrogram(
             abs_image=np.abs(complex_image),
             sound=self.sound,
-            scales=self._wbox.scales[:]
+            frequencies=self._wbox.frequencies
         )
 
 
 class Spectrogram(object):
-    def __init__(self, abs_image, sound, scales):
+    def __init__(self, abs_image, sound, frequencies):
         self.abs_image = abs_image
         self.image = toimage(apply_colormap(self.abs_image))
         self.width, self.height = self.image.size
         self.sound = sound
-        self.scales = scales
+        self.frequencies = frequencies
 
     def x2time(self, x):
         """
@@ -86,13 +86,13 @@ class Spectrogram(object):
 
     def y2freq(self, y):
         return np.interp(
-            [self.height - y],
-            np.linspace(0, self.height - 1, len(self.scales)),
-            self.scales
+            [y],
+            np.linspace(0, self.height - 1, len(self.frequencies)),
+            self.frequencies
         )[0]
 
     def freq2y(self, f):
-        return self.height - bisect.bisect_left(self.scales, f)
+        return bisect.bisect_left(self.frequencies, f)
 
     def get_sound_fragment(self, x1x2, y1y2):
         time_band = tuple(map(self.x2time, x1x2))
