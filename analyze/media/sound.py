@@ -166,15 +166,14 @@ class SoundFromSoundFile(Sound):
 
         return one_channel(_samples, 0)
 
-    def get_chunks(self, chunk_size):
-        # self.chunks_count = (sound_file.frames - 1) // (chunk_size // 2) + 1
-        # FIXME chunk_size or half
-        blocks = sf.blocks(self._filename, chunk_size)
+    def get_blocks(self, block_size):
+        # self.blocks_count = (sound_file.frames - 1) // (block_size // 2) + 1
+        blocks = sf.blocks(self._filename, block_size)
 
-        chunks = list(map(one_channel, blocks))
-        chunks_count = len(chunks)
+        blocks = list(map(one_channel, blocks))
+        blocks_count = len(blocks)
 
-        return IterableWithLength(chunks, chunks_count)
+        return IterableWithLength(blocks, blocks_count)
 
 
 class SoundResampled(Sound):
@@ -191,12 +190,12 @@ class SoundResampled(Sound):
             self.samples = self.samples[:self.size]
             self.duration = self.size / self.samplerate
 
-    def get_chunks(self, chunk_size):
+    def get_blocks(self, block_size):
         iter_samples = iter(self.samples)
-        ichunks = map(lambda _: list(it.islice(iter_samples, chunk_size)),
+        iblocks = map(lambda _: list(it.islice(iter_samples, block_size)),
                       it.count())
 
-        chunks = list(it.takewhile(len, ichunks))
-        chunks_count = len(chunks)
+        blocks = list(it.takewhile(len, iblocks))
+        blocks_count = len(blocks)
 
-        return IterableWithLength(chunks, chunks_count)
+        return IterableWithLength(blocks, blocks_count)

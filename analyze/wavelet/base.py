@@ -56,7 +56,10 @@ class BaseWaveletBox(object):
                                  scale_resolution, omega0)
         self.angular_frequencies = angularfreq(nsamples, samplerate)
 
-    def apply_cwt(self, chunks, **kwargs):
+    def apply_cwt(self, blocks, **kwargs):
+        # FIXME make chunks overlapping self here
+        chunks = blocks
+
         half_nsamples = self.nsamples / 2
         pad_num = 0
 

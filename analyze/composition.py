@@ -18,14 +18,11 @@ class Composition(object):
         self.scale_resolution = scale_resolution
         self.omega0 = omega0
 
-        # Calculate chunk_size
         # samplerate = sound.samples / sound.duration
         self.samplerate = sound.samplerate
 
         self.overlapping_block_size = 2 ** 17
         self.decimate = 2 ** int(np.log2(self.samplerate) - 8)
-
-        self.chunk_size = self.overlapping_block_size // 2
 
         self._wbox = None
 
@@ -47,16 +44,17 @@ class Composition(object):
 
     @cached_property
     def complex_image(self):
-        chunks = self.sound.get_chunks(self.chunk_size)
+        # FIXME make chunks overlapping in BaseWaveletBox.apply_cwt
+        blocks = self.sound.get_blocks(self.overlapping_block_size // 2)
 
-        return self.get_complex_image(chunks)
+        return self.get_complex_image(blocks)
 
-    def get_complex_image(self, chunks):
+    def get_complex_image(self, blocks):
         if not self._wbox:
             raise RuntimeError('You need to use {} in a with block'.
                                format(self.__class__.__name__))
 
-        return self._wbox.apply_cwt(chunks, decimate=self.decimate)
+        return self._wbox.apply_cwt(blocks, decimate=self.decimate)
 
     def get_spectrogram(self):
         return Spectrogram(
@@ -108,6 +106,6 @@ class CompositionWithProgressbar(Composition):
         self.progressbar = progressbar
         super().__init__(*args, **kwargs)
 
-    def get_complex_image(self, chunks):
-        with self.progressbar(chunks) as chunks_:
-            return super().get_complex_image(chunks_)
+    def get_complex_image(self, blocks):
+        with self.progressbar(blocks) as block_:
+            return super().get_complex_image(block_)
