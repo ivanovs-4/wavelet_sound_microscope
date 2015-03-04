@@ -150,7 +150,7 @@ def autoscales(samples_count, samplerate, scale_resolution, omega0):
 
     # Самый больший индекс - это двоичный логарифм самой высокой
     # частоты поделенный на scale_resolution
-    indexes = np.arange(indexes_count + 1, endpoint=False, dtype=np.float32)
+    indexes = np.arange(indexes_count + 1, dtype=np.float32)
 
     upper_frequency_scale = samples_duration / frequencies_interval
 
