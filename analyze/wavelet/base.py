@@ -66,6 +66,43 @@ def split_array(array, where):
     return array[:where], array[where:]
 
 
+def map_only_last(fn, iterable):
+    items = iter(iterable)
+    last = next(items)
+
+    for elem in items:
+        yield last
+        last = elem
+
+    yield fn(last)
+
+
+def test_map_only_last():
+    mapped = map_only_last(lambda x: x+1, range(3))
+
+    assert list(mapped) == [0, 1, 3]
+
+
+class NumpyPadder(object):
+    def __init__(self, size):
+        self.size = size
+        self.pad_size = None
+
+    def __call__(self, array)
+        self.pad_size = self.size - len(array)
+
+        if self.pad_size == 0:
+            return array
+
+        elif self.pad_size > 0:
+            log.info('Make pad')
+
+            return np.pad(array, (0, self.pad_size), 'constant')
+
+        assert False  # Should never come here
+        raise Exception('Pad size < 0')
+
+
 class BaseWaveletBox(object):
     def __init__(self, nsamples, samplerate, scale_resolution, omega0):
         if not is_power_of_two(nsamples):
@@ -89,32 +126,21 @@ class BaseWaveletBox(object):
             return self._apply_cwt(blocks_, progressbar, **kwargs)
 
     def _apply_cwt(self, blocks, progressbar, **kwargs):
-        chunks = gen_halfs(blocks, self.nsamples)
-
         half_nsamples = self.nsamples // 2
 
-        pad_num = 0
+        chunks = gen_halfs(blocks, self.nsamples)
 
-        def np_pad_right(data):
-            pad_num = half_nsamples - len(data)
-            if pad_num < 0:
-                assert False  # Should never come here
-                raise Exception(u'Chunks size must be equal to nsamples / 2'
-                                u' except last, which may be shorter')
-            if pad_num:
-                return np.pad(data, (0, pad_num), 'constant')
-            else:
-                return data
+        padder = NumpyPadder(half_nsamples)
 
-        equal_sized_pieces = map(np_pad_right, chunks)
+        equal_sized_pieces = map_only_last(chunks, padder)
 
         zero_pad = np.zeros(half_nsamples)
-        overlapped_pieces = iconcatenate_pairs(
+        overlapped_blocks = iconcatenate_pairs(
             chain([zero_pad], equal_sized_pieces, [zero_pad])
         )
 
         hanning = np.hanning(self.nsamples)
-        windowed_pieces = map(lambda p: p * hanning, overlapped_pieces)
+        windowed_pieces = map(lambda p: p * hanning, overlapped_blocks)
 
         complex_images = [
             self.cwt(windowed_piece, **kwargs)
@@ -123,12 +149,13 @@ class BaseWaveletBox(object):
 
         halfs = chain.from_iterable(map(split_vertical, complex_images))
         next(halfs)
-        flattened_images = [left + right for left, right in grouper(halfs, 2)]
+        overlapped_halfs = [left + right for left, right in grouper(halfs, 2)]
 
-        # Cut pad_num from last
-        flattened_images[-1] = flattened_images[-1][:, :-pad_num]
+        # Cut pad_size from last
+        last_block_size = half_nsamples - padder.pad_size
+        overlapped_halfs[-1] = overlapped_halfs[-1][:, :last_block_size]
 
-        return np.concatenate(flattened_images, axis=1)
+        return np.concatenate(overlapped_halfs, axis=1)
 
 
 def angularfreq(nsamples, samplerate):
