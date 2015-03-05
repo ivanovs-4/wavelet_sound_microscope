@@ -77,9 +77,9 @@ class BaseWaveletBox(object):
         blocks = sound.get_blocks(self.nsamples)
 
         with progressbar(blocks) as blocks_:
-            return self._apply_cwt(self, blocks_, progressbar, **kwargs)
+            return self._apply_cwt(blocks_, progressbar, **kwargs)
 
-    def _apply_cwt(self, blocks, **kwargs):
+    def _apply_cwt(self, blocks, progressbar, **kwargs):
         chunks = gen_halfs(blocks)
 
         half_nsamples = self.nsamples / 2
