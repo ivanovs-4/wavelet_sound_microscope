@@ -138,8 +138,8 @@ class SoundFragment(Sound):
             round_significant(self.begin, 2),
             round_significant(self.end, 2),
             round_significant(self.duration, 2),
-            self.fband.lower and round_significant(self.fband.lower, 2),
-            self.fband.upper and round_significant(self.fband.upper, 2),
+            self.fband.lower and round_significant(self.fband.lower, 3),
+            self.fband.upper and round_significant(self.fband.upper, 3),
         )
 
 

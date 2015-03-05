@@ -79,7 +79,7 @@ class BaseWaveletBox(object):
     @property
     def frequencies(self):
         # Set coefficient in accordance with wavelet type
-        return 12.1 / self.scales
+        return 11 / self.scales
 
     def sound_apply_cwt(self, sound, progressbar, **kwargs):
         blocks = sound.get_blocks(self.nsamples)
