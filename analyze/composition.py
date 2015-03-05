@@ -71,6 +71,7 @@ class Spectrogram(object):
         self.width, self.height = self.image.size
         self.sound = sound
         self.frequencies = frequencies
+        self.reversed_frequencies = list(reversed(frequencies))
 
     def x2time(self, x):
         """
@@ -92,7 +93,7 @@ class Spectrogram(object):
         )[0]
 
     def freq2y(self, f):
-        return bisect.bisect_left(self.frequencies, f)
+        return self.height - bisect.bisect(self.reversed_frequencies, f)
 
     def get_sound_fragment(self, x1x2, y1y2):
         time_band = tuple(map(self.x2time, x1x2))
