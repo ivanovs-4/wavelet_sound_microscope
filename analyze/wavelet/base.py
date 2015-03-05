@@ -125,7 +125,7 @@ class BaseWaveletBox(object):
         with progressbar(blocks) as blocks_:
             return self._apply_cwt(blocks_, progressbar, **kwargs)
 
-    def _apply_cwt(self, blocks, progressbar, **kwargs):
+    def _apply_cwt(self, blocks, progressbar, decimate, **kwargs):
         half_nsamples = self.nsamples // 2
 
         chunks = gen_halfs(blocks, self.nsamples)
@@ -143,7 +143,7 @@ class BaseWaveletBox(object):
         windowed_pieces = map(lambda p: p * hanning, overlapped_blocks)
 
         complex_images = [
-            self.cwt(windowed_piece, **kwargs)
+            self.cwt(windowed_piece, decimate, **kwargs)
             for windowed_piece in windowed_pieces
         ]
 
@@ -152,7 +152,8 @@ class BaseWaveletBox(object):
         overlapped_halfs = [left + right for left, right in grouper(halfs, 2)]
 
         # Cut pad size from last
-        overlapped_halfs[-1] = overlapped_halfs[-1][:, :padder.original_size]
+        last_image_size = padder.original_size // decimate
+        overlapped_halfs[-1] = overlapped_halfs[-1][:, :last_image_size]
 
         return np.concatenate(overlapped_halfs, axis=1)
 
