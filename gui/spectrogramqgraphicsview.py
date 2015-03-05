@@ -5,9 +5,9 @@ from PyQt5.QtCore import pyqtSignal, Qt, QPointF, QRectF
 from PyQt5.QtGui import QPainter, QPixmap, QImage, QBrush, QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
-from analyze.media.sound import SoundFragment
-
 from . import RubberbandSelectionQGraphicsView
+from analyze.media.notes import HARMONIC_COLORS, INTERVALS, NOTES_COLORS
+from analyze.media.sound import SoundFragment
 
 
 log = logging.getLogger(__name__)
@@ -106,6 +106,7 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
         self.fragment_selected.emit(fragment)
 
     def deal_with_harmonics(self, pos):
+        """ Harmonics show prototype """
         scene_pos = self.mapToScene(pos)
 
         closer_rect = QRectF(
@@ -118,25 +119,46 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
         sc.reset_harmonics()
         sc.add_harmonic(loudest_pos, size=8, brush=QBrush(QColor(255, 0, 0)))
 
-        # Harmonics show prototype
-        from analyze.media.notes import HARMONIC_COLORS
+        selected_x = loudest_pos.x()
+        selected_f = self.spectrogram.y2freq(loudest_pos.y())
 
-        for h in list(HARMONIC_COLORS.keys())[1:25]:
-            f = self.spectrogram.y2freq(loudest_pos.y())
-            y2 = self.spectrogram.freq2y(f * h)
+        # Octava
+        for name, interval in INTERVALS.items():
+            if interval == int(interval):
+                continue
 
             sc.add_harmonic(
-                QPointF(loudest_pos.x(), y2),
+                QPointF(
+                    selected_x,
+                    self.spectrogram.freq2y(selected_f * interval)
+                ),
+                size=4, brush=QBrush(QColor(NOTES_COLORS[name]))
+            )
+
+            sc.add_harmonic(
+                QPointF(
+                    selected_x,
+                    self.spectrogram.freq2y(selected_f * interval / 2)
+                ),
+                size=4, brush=QBrush(QColor(NOTES_COLORS[name]))
+            )
+
+        # Upper
+        for h in list(HARMONIC_COLORS.keys())[1:25]:
+            y2 = self.spectrogram.freq2y(selected_f * h)
+
+            sc.add_harmonic(
+                QPointF(selected_x, y2),
                 size=4,
                 brush=QBrush(QColor(HARMONIC_COLORS[h]))
             )
 
+        # Lower
         for h in range(2, 14):
-            f = self.spectrogram.y2freq(loudest_pos.y())
-            y2 = self.spectrogram.freq2y(f / h)
+            y2 = self.spectrogram.freq2y(selected_f / h)
 
             sc.add_harmonic(
-                QPointF(loudest_pos.x(), y2),
+                QPointF(selected_x, y2),
                 size=4,
                 brush=QBrush(QColor('#bbb'))
             )

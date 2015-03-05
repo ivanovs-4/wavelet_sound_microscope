@@ -31,6 +31,16 @@ HARMONIC_NOTES[22] = ''
 HARMONIC_NOTES[23] = ''
 HARMONIC_NOTES[24] = 'sol'
 
+INTERVALS = {
+    'do': 2,
+    'si': 15/8,
+    'la': 5/3,
+    'sol': 3/2,
+    'fa': 4/3,
+    'mi': 5/4,
+    're': 9/8,
+}
+
 # http://www.w3.org/TR/SVG/types.html#ColorKeywords
 NOTES_COLORS = {
     'si': 'mediumvioletred',
