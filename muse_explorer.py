@@ -169,8 +169,8 @@ class MainWindow(QMainWindow):
             return
 
         self.fname = fname
-        log.debug('Loadaed %s', os.path.basename(fname))
-        self.status_show('Loadaed {0}'.format(os.path.basename(fname)))
+        log.debug('Loaded %s', os.path.basename(fname))
+        self.status_show('Loaded {0}'.format(os.path.basename(fname)))
 
         sound_resampled = SoundResampled(sound, SAMPLERATE)
         self.composition_worker.process.emit(sound_resampled)

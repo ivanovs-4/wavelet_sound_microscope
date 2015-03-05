@@ -87,7 +87,7 @@ class NumpyPadder(object):
     def __init__(self, size):
         self.size = size
 
-    def __call__(self, array)
+    def __call__(self, array):
         self.original_size = len(array)
         self.pad_size = self.size - self.original_size
 
@@ -95,8 +95,6 @@ class NumpyPadder(object):
             return array
 
         elif self.pad_size > 0:
-            log.info('Make pad')
-
             return np.pad(array, (0, self.pad_size), 'constant')
 
         assert False  # Should never come here
@@ -132,7 +130,7 @@ class BaseWaveletBox(object):
 
         padder = NumpyPadder(half_nsamples)
 
-        equal_sized_pieces = map_only_last(chunks, padder)
+        equal_sized_pieces = map_only_last(padder, chunks)
 
         zero_pad = np.zeros(half_nsamples)
         overlapped_blocks = iconcatenate_pairs(
