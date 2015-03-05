@@ -46,16 +46,24 @@ def is_power_of_two(val):
     return val and val & (val - 1) == 0
 
 
-def gen_halfs(arrays):
+def gen_halfs(arrays, size):
+    halfsize = size // 2
+
     for array in arrays:
-        pair = split_array(array, len(array) // 2)
+        pair = split_array(array, halfsize)
 
         for j in filter(len, pair):
             yield j
 
 
+def test_gen_halfs():
+    d = [ [1,2,3,4], [5,6,7], ]
+
+    assert list(gen_halfs(d, 4)) == [[1, 2], [3, 4], [5, 6], [7]]
+
+
 def split_array(array, where):
-    return array[:where], array[-where:]
+    return array[:where], array[where:]
 
 
 class BaseWaveletBox(object):
@@ -75,14 +83,16 @@ class BaseWaveletBox(object):
 
     def sound_apply_cwt(self, sound, progressbar, **kwargs):
         blocks = sound.get_blocks(self.nsamples)
+        # blocks = sound.get_blocks(self.nsamples//2)
 
         with progressbar(blocks) as blocks_:
             return self._apply_cwt(blocks_, progressbar, **kwargs)
 
     def _apply_cwt(self, blocks, progressbar, **kwargs):
-        chunks = gen_halfs(blocks)
+        chunks = gen_halfs(blocks, self.nsamples)
 
-        half_nsamples = self.nsamples / 2
+        half_nsamples = self.nsamples // 2
+
         pad_num = 0
 
         def np_pad_right(data):
