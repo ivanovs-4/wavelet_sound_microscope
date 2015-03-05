@@ -86,10 +86,10 @@ def test_map_only_last():
 class NumpyPadder(object):
     def __init__(self, size):
         self.size = size
-        self.pad_size = None
 
     def __call__(self, array)
-        self.pad_size = self.size - len(array)
+        self.original_size = len(array)
+        self.pad_size = self.size - self.original_size
 
         if self.pad_size == 0:
             return array
@@ -151,9 +151,8 @@ class BaseWaveletBox(object):
         next(halfs)
         overlapped_halfs = [left + right for left, right in grouper(halfs, 2)]
 
-        # Cut pad_size from last
-        last_block_size = half_nsamples - padder.pad_size
-        overlapped_halfs[-1] = overlapped_halfs[-1][:, :last_block_size]
+        # Cut pad size from last
+        overlapped_halfs[-1] = overlapped_halfs[-1][:, :padder.original_size]
 
         return np.concatenate(overlapped_halfs, axis=1)
 
