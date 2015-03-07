@@ -99,12 +99,12 @@ class QCompositionWorker(QThreadedWorker):
 
             return
 
+        else:
+            log.debug('Image processed')
+            self.process_ok.emit(spectrogram)
+
         finally:
             self.busy = False
-
-        log.debug('Image processed')
-
-        self.process_ok.emit(spectrogram)
 
     def _message(self, msg):
         self.message.emit(msg)
