@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 
 from analyze.media.sound import SoundFromSoundFile
 from gui.composition_worker import QCompositionWorker
+from gui.play_worker import QPlayWorker
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
 
@@ -40,6 +41,8 @@ class MainWindow(QMainWindow):
         self.composition_worker.process_error.connect(
             self.on_composition_process_error
         )
+
+        self.play_worker = QPlayWorker()
 
         self.fname = None
 
@@ -118,13 +121,13 @@ class MainWindow(QMainWindow):
         if not getattr(self, 'fragment', False):
             return
 
-        self.fragment.play()
+        self.play_worker.play.emit(self.fragment)
 
     def play_fragment_fb(self):
         if not getattr(self, 'fragment', False):
             return
 
-        self.fragment.full_band_sound.play()
+        self.play_worker.play.emit(self.fragment.full_band_sound)
 
     def file_open(self):
         if not self.ok_to_continue:
