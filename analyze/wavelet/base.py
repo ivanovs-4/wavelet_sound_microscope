@@ -107,6 +107,7 @@ class BaseWaveletBox(object):
             raise Exception(u'nsamples must be power of two')
 
         self.nsamples = nsamples
+        self.omega0 = omega0
         self.scales = autoscales(nsamples, samplerate,
                                  scale_resolution, omega0)
         self.angular_frequencies = angularfreq(nsamples, samplerate)
@@ -114,7 +115,7 @@ class BaseWaveletBox(object):
     @property
     def frequencies(self):
         # Set coefficient in accordance with wavelet type
-        return 11 / self.scales
+        return 11 * (self.omega0 / 70) / self.scales
 
     def sound_apply_cwt(self, sound, progressbar, **kwargs):
         blocks = sound.get_blocks(self.nsamples)
