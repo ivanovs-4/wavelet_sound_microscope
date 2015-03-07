@@ -1,7 +1,11 @@
 from functools import partial
 from itertools import chain, tee
+import logging
 
 import numpy as np
+
+log = logging.getLogger(__name__)
+
 
 PI2 = 2 * np.pi
 
@@ -167,33 +171,31 @@ def angularfreq(nsamples, samplerate):
     return angfreq
 
 
+# Чем больше, тем больше октав снизу будет отброшено
+LOWER_FQ_LIMIT_COEFF = 0.5
+
+
 def autoscales(samples_count, samplerate, scale_resolution, omega0):
     """ Compute scales as fractional power of two """
 
-    samples_duration = samples_count / samplerate
+    # morle_samples - количество отсчетов для базового вейвлета
+    morle_samples = (omega0 + np.sqrt(2 + omega0 ** 2)) / PI2
 
-    frequencies_interval = PI2 * samples_count / (
-        omega0 + np.sqrt(2 + omega0 ** 2)
-    )
+    # scale - измеряется в секундах
+    minimal_scale = morle_samples / samplerate
 
-    indexes_count = int(np.floor(
-        np.log2(frequencies_interval) / scale_resolution
-    ))
+    # сколько базовых вейвлетов поместится (диапазон частот)
+    freq_interval = samples_count / morle_samples
 
-    # Самый больший индекс - это двоичный логарифм самой высокой
-    # частоты поделенный на scale_resolution
+    skip_n_lower_octaves = LOWER_FQ_LIMIT_COEFF * samples_count / samplerate
+    skipped_low_freq_interval = max(1, 2**skip_n_lower_octaves)
+
+    visible_freq_interval = freq_interval / skipped_low_freq_interval
+    maximal_scale = np.log2(visible_freq_interval)
+
+    indexes_count = int(np.floor(maximal_scale / scale_resolution))
+
     indexes = np.arange(indexes_count + 1, dtype=np.float32)
-
-    upper_frequency_scale = samples_duration / frequencies_interval
-
-    # А самый высокий индекс умноженный на scale_resolution - это двоичный
-    # логарифм самой высокой частоты
-    # frequencies_interval == (2 ** (indexes_count * scale_resolution))
-
     logarithmic_indexes = 2 ** (indexes * scale_resolution)
 
-    # Самая большая scale - samples_duration
-    # Самая меньшая scale - upper_frequency_scale
-    # frequencies_interval == samples_duration / upper_frequency_scale
-
-    return upper_frequency_scale * logarithmic_indexes
+    return minimal_scale * logarithmic_indexes
