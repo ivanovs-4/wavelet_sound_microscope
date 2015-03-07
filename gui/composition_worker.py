@@ -87,7 +87,7 @@ class QCompositionWorker(QThreadedWorker):
 
         try:
             with Composition(
-                sound_resampled, scale_resolution=1/122, omega0=90
+                sound_resampled, scale_resolution=1/122, omega0=70
             ) as composition:
 
                 self._message('Analyse')

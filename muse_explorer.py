@@ -121,13 +121,15 @@ class MainWindow(QMainWindow):
         if not getattr(self, 'fragment', False):
             return
 
-        self.play_worker.play.emit(self.fragment)
+        if not self.play_worker.busy:
+            self.play_worker.play.emit(self.fragment)
 
     def play_fragment_fb(self):
         if not getattr(self, 'fragment', False):
             return
 
-        self.play_worker.play.emit(self.fragment.full_band_sound)
+        if not self.play_worker.busy:
+            self.play_worker.play.emit(self.fragment.full_band_sound)
 
     def file_open(self):
         if not self.ok_to_continue:
