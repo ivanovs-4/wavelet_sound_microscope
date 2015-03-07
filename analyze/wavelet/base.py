@@ -157,30 +157,6 @@ class BaseWaveletBox(object):
         return np.concatenate(overlapped_halfs, axis=1)
 
 
-def test_angularfreq_new():
-    import itertools as it
-
-    for nsamples, samplerate in it.product([2**10, 2**12], [44100, 48000]):
-        new = angularfreq(nsamples, samplerate)
-        old = angularfreq_old(nsamples, samplerate)
-        assert len(new) == len(old)
-        assert all(np.abs(new - old) <= 0.001 * np.abs(old))
-
-        angfreq = np.arange(nsamples, dtype=np.float32)
-        angfreq[-nsamples/2 + 1:] -= nsamples
-
-        N2 = nsamples / 2.0
-
-        assert list(angfreq) == list(np.array(
-            [
-                i if i <= N2 else i - nsamples
-                for i in range(nsamples)
-            ],
-            np.float32
-        ))
-
-
-
 def angularfreq(nsamples, samplerate):
     """ Compute angular frequencies """
 
@@ -189,20 +165,6 @@ def angularfreq(nsamples, samplerate):
     angfreq *= samplerate * PI2 / nsamples
 
     return angfreq
-
-
-def angularfreq_old(nsamples, samplerate):
-    """ Compute angular frequencies """
-
-    N2 = nsamples / 2.0
-
-    return np.array(
-        [
-            samplerate * PI2 * (i if i <= N2 else i - nsamples) / nsamples
-            for i in range(nsamples)
-        ],
-        np.float32
-    )
 
 
 def autoscales(samples_count, samplerate, scale_resolution, omega0):
