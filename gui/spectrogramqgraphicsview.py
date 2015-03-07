@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 class SpectrogramQGraphicsScene(QGraphicsScene):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setItemIndexMethod(QGraphicsScene.NoIndex)
         self.selection_rect_item = None
         self.harmonics_items = []
 
@@ -50,7 +51,6 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
     def __init__(self):
         self.spectrogram = None
         self.scene = SpectrogramQGraphicsScene()
-        # scene.setItemIndexMethod(QGraphicsScene.NoIndex)
 
         super().__init__(self.scene)
 

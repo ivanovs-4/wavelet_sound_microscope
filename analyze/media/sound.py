@@ -184,7 +184,7 @@ class SoundResampled(Sound):
         self.duration = original.duration
 
         # debug
-        cut_duration = 40
+        cut_duration = 30
         if self.duration > cut_duration:
             self.size = cut_duration * self.samplerate
             self.samples = self.samples[:self.size]
