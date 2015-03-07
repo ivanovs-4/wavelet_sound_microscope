@@ -12,5 +12,4 @@ On Geforce GT 630 it is about 3 x realtime.
 * Universal play sound
 * Fix PyCUDA ERROR: The context stack was not empty upon module cleanup.
 * Long cache composition results
-* Use smooth horizontal normalization
 * Debian package
