@@ -98,3 +98,18 @@ def _length_hint(obj):
 
 def round_significant(value, count=1):
     return round(value, count - 1 - math.floor(math.log10(value)))
+
+
+def is_int_power_of_two(val):
+    val_log2 = math.log(val, 2)
+
+    return int(val_log2) == val_log2
+
+
+def test_is_int_power_of_two():
+    for j in range(8):
+        assert is_int_power_of_two(2**j)
+
+    assert not is_int_power_of_two(3)
+    assert not is_int_power_of_two(5)
+    assert not is_int_power_of_two(7)

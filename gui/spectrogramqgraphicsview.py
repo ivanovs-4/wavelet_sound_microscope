@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QGraphicsScene
 from . import RubberbandSelectionQGraphicsView
 from analyze.media.notes import HARMONIC_COLORS, INTERVALS, NOTES_COLORS
 from analyze.media.sound import SoundFragment
+from utils import is_int_power_of_two
 
 
 log = logging.getLogger(__name__)
@@ -39,7 +40,8 @@ class SpectrogramQGraphicsScene(QGraphicsScene):
         self.harmonics_items = []
 
     def add_harmonic(self, pos, size, **kwargs):
-        el = self.addEllipse(QRectF(-size/2, -size/2, size, size), **kwargs)
+        w, h = size, size
+        el = self.addEllipse(QRectF(-w/2, -h/2, w, h), **kwargs)
         el.setPos(pos)
         self.harmonics_items.append(el)
 
@@ -132,7 +134,8 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
                     selected_x,
                     self.spectrogram.freq2y(selected_f * interval)
                 ),
-                size=4, brush=QBrush(QColor(NOTES_COLORS[name]))
+                size=4,
+                brush=QBrush(QColor(NOTES_COLORS[name]))
             )
 
             sc.add_harmonic(
@@ -140,7 +143,8 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
                     selected_x,
                     self.spectrogram.freq2y(selected_f * interval / 2)
                 ),
-                size=4, brush=QBrush(QColor(NOTES_COLORS[name]))
+                size=4,
+                brush=QBrush(QColor(NOTES_COLORS[name]))
             )
 
         # Upper
@@ -149,18 +153,19 @@ class SpectrogramQGraphicsView(RubberbandSelectionQGraphicsView):
 
             sc.add_harmonic(
                 QPointF(selected_x, y2),
-                size=4,
+                size=5 if is_int_power_of_two(h) else 4,
                 brush=QBrush(QColor(HARMONIC_COLORS[h]))
             )
 
         # Lower
-        for h in range(2, 14):
+        for h in range(2, 17):
             y2 = self.spectrogram.freq2y(selected_f / h)
 
             sc.add_harmonic(
                 QPointF(selected_x, y2),
-                size=4,
-                brush=QBrush(QColor('#bbb'))
+                size=5 if is_int_power_of_two(h) else 4,
+                brush=QBrush(QColor('red') if is_int_power_of_two(h)
+                             else QColor('#bbb'))
             )
 
     def where_loudest_in_rect(self, rect):
