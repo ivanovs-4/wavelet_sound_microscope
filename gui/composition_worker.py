@@ -7,8 +7,11 @@ from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
 from .threading import QThreadedWorkerDebug as QThreadedWorker
 from analyze.composition import Composition, Spectrogram
-from analyze.media.sound import Sound
+from analyze.media.sound import Sound, SoundResampled
 from utils import ProgressProxy
+
+
+SAMPLERATE = 1024 * 16
 
 
 log = logging.getLogger(__name__)
@@ -74,6 +77,9 @@ class QCompositionWorker(QThreadedWorker):
 
         self.busy = True
 
+        self._message('Resample sound')
+        sound_resampled = SoundResampled(sound, SAMPLERATE)
+
         progressbar = partial(ProgressProxyToProgressDialog,
                               self.progress_dialog)
 
@@ -81,7 +87,7 @@ class QCompositionWorker(QThreadedWorker):
 
         try:
             with Composition(
-                sound, scale_resolution=1/100, omega0=70
+                sound_resampled, scale_resolution=1/100, omega0=70
             ) as composition:
 
                 self._message('Analyse')

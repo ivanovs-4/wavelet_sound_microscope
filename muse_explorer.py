@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QProgressDialog,
 )
 
-from analyze.media.sound import SoundFromSoundFile, SoundResampled
+from analyze.media.sound import SoundFromSoundFile
 from gui.composition_worker import QCompositionWorker
 from gui.spectrogramqgraphicsview import SpectrogramQGraphicsView
 
@@ -22,9 +22,6 @@ logging.basicConfig(format='%(levelname)s\t[%(threadName)s]\t%(filename)s:'
 logging.getLogger('').setLevel(logging.DEBUG)
 
 log = logging.getLogger(__name__)
-
-
-SAMPLERATE = 1024 * 16
 
 
 class MainWindow(QMainWindow):
@@ -172,8 +169,7 @@ class MainWindow(QMainWindow):
         log.debug('Loaded %s', os.path.basename(fname))
         self.status_show('Loaded {0}'.format(os.path.basename(fname)))
 
-        sound_resampled = SoundResampled(sound, SAMPLERATE)
-        self.composition_worker.process.emit(sound_resampled)
+        self.composition_worker.process.emit(sound)
 
     def on_composition_processed(self, spectrogram):
         log.debug('Run update_spectrogram %s', spectrogram)
