@@ -142,8 +142,7 @@ class BaseWaveletBox(object):
             chain([zero_pad], equal_sized_pieces, [zero_pad])
         )
 
-        hanning = np.hanning(self.nsamples)
-        windowed_pieces = map(lambda p: p * hanning, overlapped_blocks)
+        windowed_pieces = overlapped_blocks * np.hanning(self.nsamples)
 
         complex_images = [
             self.cwt(windowed_piece, decimate, **kwargs)

@@ -6,4 +6,7 @@ python3-matplotlib
 python3-numpy
 python3-pil
 python3-pycuda
+pyqt5-dev
+pyqt5-dev-tools
+libsndfile1
 python3-scipy

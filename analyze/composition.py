@@ -27,7 +27,7 @@ class Composition(object):
         self._wbox = None
 
     def __enter__(self):
-        from .wavelet.cuda_backend import WaveletBox
+        from .wavelet.intel_backend import WaveletBox
 
         self._wbox = WaveletBox(
             self.block_size,

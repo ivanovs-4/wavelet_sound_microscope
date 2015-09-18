@@ -1,44 +1,7 @@
 import numpy as np
-import pycuda.autoinit
-import pycuda.driver as cuda
-import pycuda.gpuarray as gpuarray
-from pycuda.elementwise import ElementwiseKernel
+import py
 
 from .base import BaseWaveletBox, PI2
-from .pyfft.cuda import Plan
-
-
-calculate_morlet = ElementwiseKernel(
-    'pycuda::complex<float> *dest, '
-    'float normal_pi_sqr_1_4, '
-    'float scale, '
-    'float *angular_frequencies, '
-    'float omega0',
-    '''
-        if(angular_frequencies[i] > 0) {
-            dest[i] = normal_pi_sqr_1_4 *
-                expf(-powf(scale * angular_frequencies[i] -
-                           omega0, 2.0) / 2.0);
-        }
-        else {
-            dest[i] = 0;
-        }
-    ''',
-    'calculate_morlet',
-    preamble='''#include <pycuda-complex.hpp>'''
-)
-
-
-multiply_them = ElementwiseKernel(
-    """
-    pycuda::complex<float> *dest,
-    pycuda::complex<float> *left,
-    pycuda::complex<float> *right
-    """,
-    'dest[i] = left[i] * right[i]',
-    'multiply_them',
-    preamble='''#include <pycuda-complex.hpp>'''
-)
 
 
 class WaveletBox(BaseWaveletBox):
@@ -50,11 +13,8 @@ class WaveletBox(BaseWaveletBox):
         self.wft = morlet_ft_box(self.scales, self.angular_frequencies,
                                  omega0, samplerate)
 
-        stream = cuda.Stream()
-
-        self.plan = Plan((nsamples,), stream=stream)
-
     def cwt(self, data, decimate=None):
+
         x_arr = np.asarray(data, dtype=np.complex64) - np.mean(data)
         x_width = x_arr.shape[0]
 
