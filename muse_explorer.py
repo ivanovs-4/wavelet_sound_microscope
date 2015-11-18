@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
         path = (os.path.dirname(self.fname)
                 if self.fname is not None
                 else '.')
-        formats = ['*.wav', '*.flac']
+        formats = ['*.wav', '*.flac', '*.ogg']
 
         fname, fmts = QFileDialog.getOpenFileName(
             self,

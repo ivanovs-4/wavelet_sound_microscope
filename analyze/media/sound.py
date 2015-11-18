@@ -5,8 +5,7 @@ import subprocess as sub
 import numpy as np
 import scipy.signal
 
-
-import pysoundfile as sf
+import soundfile as sf
 
 from utils import IterableWithLength, round_significant
 
@@ -39,8 +38,8 @@ class Sound(object):
         fragment_filename = '/tmp/fragment.wav'
         sub.check_call(['rm', '-rf', fragment_filename])
         sf.write(self.samples, fragment_filename, self.samplerate)
-        sub.check_call(['mplayer', '-ao', 'alsa:noblock:device=hw=Set',
-                        fragment_filename])
+
+        sub.check_call(['play', fragment_filename])
 
     def get_fragment(self, time_band, frequency_band=(None, None)):
         begin, end = tuple(sorted(time_band))

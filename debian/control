@@ -1,7 +1,9 @@
+libsndfile1
+pyqt5-dev
+pyqt5-dev-tools
+python3-cffi
 python3-matplotlib
 python3-numpy
 python3-pil
-pyqt5-dev
-pyqt5-dev-tools
 python3-pycuda
-libsndfile
+python3-scipy
