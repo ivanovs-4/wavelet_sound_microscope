@@ -4,6 +4,7 @@ from functools import partial
 
 from PIL.Image import Image
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
+from PyQt5.QtWidgets import QProgressDialog
 
 from .threading import QThreadedWorkerDebug as QThreadedWorker
 from analyze.composition import Composition, Spectrogram
@@ -51,13 +52,12 @@ class CompositionCanceled(Exception):
 
 
 class QCompositionWorker(QThreadedWorker):
-    def __init__(self, progress_dialog):
+    def __init__(self):
         super().__init__()
         self.busy = False
-        self.progress_dialog = progress_dialog
         self.process.connect(self._process)
 
-    process = pyqtSignal(Sound)
+    process = pyqtSignal(Sound, QProgressDialog)
     process_ok = pyqtSignal(Spectrogram)
     process_error = pyqtSignal(str)
 
@@ -66,7 +66,7 @@ class QCompositionWorker(QThreadedWorker):
     def set_progress_value(self, val):
         self._message('Progress value: {}'.format(val))
 
-    def _process(self, sound):
+    def _process(self, sound, progressbar):
         log.debug('Before Image processed')
 
         # FIXME Implement jobs queue. Just cancel previous here
@@ -80,8 +80,7 @@ class QCompositionWorker(QThreadedWorker):
         self._message('Resample sound')
         sound_resampled = SoundResampled(sound, SAMPLERATE)
 
-        progressbar = partial(ProgressProxyToProgressDialog,
-                              self.progress_dialog)
+        progressbar = partial(ProgressProxyToProgressDialog, progress_dialog)
 
         self._message('Prepare composition')
 

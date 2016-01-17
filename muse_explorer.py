@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         self.progress_dialog.setWindowModality(Qt.WindowModal)
         self.progress_dialog.setMinimumDuration(100)
 
-        self.composition_worker = QCompositionWorker(self.progress_dialog)
+        self.composition_worker = QCompositionWorker()
         self.composition_worker.message.connect(self.status_show)
         self.composition_worker.process_ok.connect(
             self.on_composition_processed
@@ -174,7 +174,7 @@ class MainWindow(QMainWindow):
         log.debug('Loaded %s', os.path.basename(fname))
         self.status_show('Loaded {0}'.format(os.path.basename(fname)))
 
-        self.composition_worker.process.emit(sound)
+        self.composition_worker.process.emit(sound, self.progress_dialog)
 
     def on_composition_processed(self, spectrogram):
         log.debug('Run update_spectrogram %s', spectrogram)
